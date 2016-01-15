@@ -3,3 +3,4 @@ traceify
 bin*
 *.DS_STORE
 *.pmm
+*.swp
