@@ -1,8 +1,8 @@
-CXXFLAGS = -Wall -g
+CXXFLAGS = -Wall -g -DDEBUG
 
 BIN 	= bin/
 SOURCE 	= src/
-DEPS 	= pixel msg
+DEPS 	= colour light viewport world ray vec3
 SOURCES = $(addprefix $(SOURCE), $(addsuffix .cpp, $(DEPS)) )
 OBJECTS = $(addprefix $(BIN),  $(addsuffix .o, $(DEPS)) )
 EXEC 	= traceify
