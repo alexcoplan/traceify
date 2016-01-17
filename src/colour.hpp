@@ -14,6 +14,7 @@
 #include <string>
 #include <cmath>
 #include "vec3.hpp"
+#include "debug.h"
 
 // Note: RGBColour is used to store colours for pixels
 // RGBVec is used in the internals of the raytracer
@@ -27,6 +28,7 @@ private:
 public:
 	RGBVec();
 	RGBVec(const RGBVec &rgbv);
+	RGBVec(const vec3 &v);
 	RGBVec(double red, double green, double blue);
 
 	// accessors
@@ -44,10 +46,14 @@ public:
 	void setB(double);
 
 	// general methods
-	void scale(double factor) {
-		cvec.scale(factor);
-		normalise();
-	}
+	void scale(double factor);
+	RGBVec scaled(double factor);
+	RGBVec scaled(double factor) const;
+
+	RGBVec multiplyColour(const RGBVec &v);
+	RGBVec multiplyColour(const RGBVec &v) const;
+
+	D(void debug_print();)
 };	
 
 struct RGBColour {
@@ -58,6 +64,8 @@ public:
 	RGBColour(char, char, char);
 	std::string getColour();
 	RGBColour(const RGBVec &v); 
+
+	D(void debug_print();)
 };
 
 

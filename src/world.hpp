@@ -18,7 +18,9 @@ public:
 	virtual IntersectionResult intersects(const Ray &r) = 0;
 	virtual SceneObject *makeCopy() = 0;
 	virtual SceneObject *makeCopy() const = 0;
-	virtual ~SceneObject() = 0;
+	virtual vec3 surfaceNormal(const vec3 &point) = 0;
+	virtual vec3 surfaceNormal(const vec3 &point) const = 0;
+	virtual ~SceneObject();
 };
 
 class Sphere : public SceneObject {
@@ -33,6 +35,8 @@ public:
 	IntersectionResult intersects(const Ray &r);
 	SceneObject *makeCopy();
 	SceneObject *makeCopy() const;
+	vec3 surfaceNormal(const vec3 &point);
+	vec3 surfaceNormal(const vec3 &point) const;
 };
 
 class World {

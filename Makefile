@@ -1,14 +1,17 @@
-CXXFLAGS = -Wall -g -DDEBUG
+CXXFLAGS = -Wall 
 
 BIN 	= bin/
 SOURCE 	= src/
-DEPS 	= colour light viewport world ray vec3
+DEPS 	= colour image light viewport world ray vec3
 SOURCES = $(addprefix $(SOURCE), $(addsuffix .cpp, $(DEPS)) )
 OBJECTS = $(addprefix $(BIN),  $(addsuffix .o, $(DEPS)) )
 EXEC 	= traceify
 MAIN    = $(SOURCE)$(EXEC).cpp
 
 all: $(SOURCES) $(EXEC)
+
+debug: CXXFLAGS += -g -DDEBUG
+debug: $(SOURCES) $(EXEC)
 
 $(OBJECTS) : | $(BIN)
 

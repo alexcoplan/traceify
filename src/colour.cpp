@@ -2,6 +2,7 @@
 
 // RGBVec: constructors
 RGBVec::RGBVec() : cvec(0.0,0.0,0.0) {} // default to black
+RGBVec::RGBVec(const vec3 &v) : cvec(v) {}
 RGBVec::RGBVec(const RGBVec &rgbv) : cvec(rgbv.cvec) {}
 RGBVec::RGBVec(double r, double g, double b) : cvec(r,g,b) {}
 
@@ -26,6 +27,32 @@ void RGBVec::normalise() {
 	if (b() > 1.0) setB(1.0);
 }
 
+void RGBVec::scale(double factor) {
+	cvec.scale(factor);
+	normalise();
+}
+
+RGBVec RGBVec::scaled(double factor) {
+	return RGBVec(cvec.scaled(factor));
+}
+
+RGBVec RGBVec::scaled(double factor) const {
+	return RGBVec(cvec.scaled(factor));
+}
+
+RGBVec RGBVec::multiplyColour(const RGBVec &v) {
+	return RGBVec(r() * v.r(), g() * v.g(), b() * v.b());
+}
+
+RGBVec RGBVec::multiplyColour(const RGBVec &v) const {
+	return RGBVec(r() * v.r(), g() * v.g(), b() * v.b());
+}
+
+D(
+void RGBVec::debug_print() {
+	std::cout << "(" << r() << "," << g() << "," << b() << ")" << std::endl;
+}
+)
 
 // RGBColour
 RGBColour::RGBColour() {
@@ -42,9 +69,9 @@ RGBColour::RGBColour(char red, char green, char blue) {
 }	
 
 RGBColour::RGBColour(const RGBVec &v) { 
-	colour[0] = (char)(round(v.r()) * 255.0);
-	colour[1] = (char)(round(v.g()) * 255.0);
-	colour[2] = (char)(round(v.b()) * 255.0);
+	colour[0] = (char)(round(v.r() * 255.0));
+	colour[1] = (char)(round(v.g() * 255.0));
+	colour[2] = (char)(round(v.b() * 255.0));
 }
 
 std::string RGBColour::getColour() {

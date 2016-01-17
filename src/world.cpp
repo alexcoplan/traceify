@@ -13,6 +13,20 @@ public:
 // SceneObject virtual destructor definition
 SceneObject::~SceneObject() {}
 
+// makeCopy method is necessary to allow us
+// to make a heap-allocated copy of a SceneObject
+// without knowing its type at compile-time
+//
+// since this method is virtual, it achieves that for us
+SceneObject *Sphere::makeCopy() {
+	return new Sphere(*this);
+}
+
+SceneObject *Sphere::makeCopy() const {
+	return new Sphere(*this);
+}
+
+
 // Sphere
 Sphere::Sphere(vec3 c, double r, RGBVec k_d) : centre(c), radius(r) {
 	diffuse_colour = k_d;
@@ -26,17 +40,14 @@ Sphere::Sphere(const Sphere &s) : centre(s.centre), radius(s.radius) {
 	diffuse_colour = s.diffuse_colour;
 }
 
-// makeCopy method is necessary to allow us
-// to make a heap-allocated copy of a SceneObject
-// without knowing its type at compile-time
-//
-// since this method is virtual, it achieves that for us
-SceneObject *Sphere::makeCopy() {
-	return new Sphere(*this);
+vec3 Sphere::surfaceNormal(const vec3 &p) {
+	// assume p is a point on the surface of the sphere
+	return (p - centre).normalised();
 }
 
-SceneObject *Sphere::makeCopy() const {
-	return new Sphere(*this);
+vec3 Sphere::surfaceNormal(const vec3 &p) const {
+	// assume p is a point on the surface of the sphere
+	return (p - centre).normalised();
 }
 
 
@@ -85,12 +96,13 @@ RGBColour World::traceRayAt(int i, int j) {
 	double vValue = viewport.vAmount(j);
 	double d = viewport.getViewingDistance();
 	vec3 direction = wAxis.scaled(-d) + uAxis.scaled(uValue) + vAxis.scaled(vValue);	
+	/*
 	D(
 		if (i % 50 == 0 && j % 50 == 0) {
 			std::cout << "Casting ray (" << i << "," << j << ") " << "in direction: ";
 			direction.debug_print();
 		}
-	)
+	)*/
 
 	Ray ray(cameraPosition, direction); 
 
@@ -113,6 +125,7 @@ RGBColour World::traceRayAt(int i, int j) {
 		}	
 	}
 
+	 
 	D(
 		if (i % 50 == 0 && j % 50 == 0 && closestObject != NULL)
 			std::cout << "Intersection at (" << i << "," << j << ")!, t = " << t << std::endl;
@@ -122,13 +135,21 @@ RGBColour World::traceRayAt(int i, int j) {
 		return RGBColour(bg_colour);
 	}
 	
-	RGBColour the_colour(closestObject->diffuse_colour);
+	RGBVec obj_colour(closestObject->diffuse_colour);
+
+	vec3 intersectionPoint = ray.intersectionPoint(t);
+	double alignment = closestObject->surfaceNormal(intersectionPoint).dot(light.lVectorFromPoint(intersectionPoint));
+	double coefficient = alignment > 0.0 ? alignment : 0.0;
+
+	RGBVec result_vec(obj_colour.multiplyColour(light.colour).scaled(coefficient)); 
+
 	D(
 		if (i % 50 == 0 && j % 50 == 0) {
-			std::cout << "Vector red = " << closestObject->diffuse_colour.r() << std::endl;
-			std::cout << "Red component = " << (int)the_colour.colour[0] << std::endl;	
+			std::cout << "Colour = ";
+			result_vec.debug_print();
+			std::cout << std::endl;
 		}
 	)
 	
-	return the_colour;
+	return RGBColour(result_vec);
 }	

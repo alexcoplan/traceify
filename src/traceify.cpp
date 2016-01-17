@@ -5,78 +5,28 @@
 #include "colour.hpp"
 #include "vec3.hpp"
 #include "world.hpp"
+#include "image.hpp"
 
 #define IMG_SIZE 500
 #define CAMERA_WIDTH 0.1
 #define VIEWING_DISTANCE 0.1
 #define SPHERE_RADIUS 0.4
 
-struct OutOfImageException : public std::runtime_error {
-	OutOfImageException(int i) : std::runtime_error("Index " + std::to_string(i) + " out of range") {}
-};
-
-
-struct Image;
-std::ostream& operator<<(std::ostream& os, const Image &img_obj);
-
-struct Image {
-	RGBColour **img;
-	int width;
-	int height;
-
-	Image(int w, int h) : width(w), height(h) { 
-		img = new RGBColour*[height];
-		for (int i = 0; i < height; i++) {
-			img[i] = new RGBColour[width];
-		}
-	}
-
-	~Image() {
-		for (int i = 0; i < height; i++) {
-			delete[] img[i];	
-		}
-		delete[] img;
-	}
-
-	RGBColour *operator[](int i) {
-		if (i > height) throw OutOfImageException(i);
-		return img[i];
-	}
-
-	RGBColour *operator[](int i) const {
-		if (i > height) throw OutOfImageException(i);
-		return img[i];
-	}
-
-	void writeToFile(std::string fname) {
-		std::ofstream daFile(fname, std::ios::out | std::ios::binary);
-		daFile << *this;
-	}
-};
-
-std::ostream& operator<<(std::ostream& os, const Image &img_obj) {
-	os << "P6" << std::endl << img_obj.width << " " << img_obj.height << std::endl << "255" << std::endl;
-	for (int i = 0; i < img_obj.height; i++) {
-		for (int j = 0; j < img_obj.width; j++) {
-			os.write(&(img_obj[i][j].colour[0]), 3);
-		}
-	}	
-	return os;
-}
-
 
 void trace_dem_rays()
 {
+	const double sphere_distance = 20.0;
+
 	World world(
-			Viewport(IMG_SIZE, CAMERA_WIDTH, VIEWING_DISTANCE), // camera/viewport setup
-			RGBVec(),					    // background colour (init black)
-			Light(vec3(-2.0,2.0,1.0), RGBVec(0.5,0.5,0.5))
+			Viewport(IMG_SIZE, CAMERA_WIDTH, VIEWING_DISTANCE), 	// camera/viewport setup
+			RGBVec(),					    	// background colour (init black)
+			Light(vec3(-3.0,-1.0,sphere_distance-10.0), RGBVec(0.9,0.9,0.9))		// set up point light
 	);
 	
 	Image img(world.viewport.pixelsWide(), world.viewport.pixelsTall());
 	
-	vec3 sphere_centre(0.0,0.0,20.0);
-	Sphere s(sphere_centre, SPHERE_RADIUS, RGBVec(1.0,0.0,0.0)); 
+	vec3 sphere_centre(0.0,0.0,sphere_distance);
+	Sphere s(sphere_centre, SPHERE_RADIUS, RGBVec(0.0,1.0,0.0)); 
 	world.addObject(s);
 
 	for (int i = 0; i < IMG_SIZE; i++) {
@@ -85,7 +35,7 @@ void trace_dem_rays()
 		}
 	}
 
-	img.writeToFile("render.pmm");
+	img.writeToFile("render2.pmm");
 }
 
 void draw_test_image()
