@@ -28,26 +28,33 @@ void trace_dem_rays()
 	world.addLight(l2);
 	
 	Image img(world.viewport.pixelsWide(), world.viewport.pixelsTall());
-	
+
+	// base material for spheres: specularity 2.0, ambient 0.05 
+	// this mateiral is green, we should change this for each sphere
+	Material sphere_mat(RGBVec(0.0,1.0,0.0), 32.0, 0.05);
+
 	// green sphere
 	vec3 sphere_centre(-2.0,0.0,sphere_distance-1.5);
-	Sphere s(sphere_centre, SPHERE_RADIUS, RGBVec(0.0,1.0,0.0)); 
+	Sphere s(sphere_centre, SPHERE_RADIUS, sphere_mat); 
 	world.addObject(s);
 
 	// red sphere
 	const vec3 s2_centre(2.0,0.0,sphere_distance+2.0);
-	Sphere s2(s2_centre, SPHERE_RADIUS, RGBVec(1.0,0.0,0.0));
+	sphere_mat.setMaterialColour(RGBVec(1.0,0.0,0.0));
+	Sphere s2(s2_centre, SPHERE_RADIUS, sphere_mat);
 	world.addObject(s2);
 
 	const vec3 s3_centre(0.0,-0.6,10.0);
-	Sphere s3(s3_centre, SPHERE_RADIUS/3.0, RGBVec(0.1,0.1,1.0));
+	sphere_mat.setMaterialColour(RGBVec(0.0,0.0,1.0));
+	Sphere s3(s3_centre, SPHERE_RADIUS/3.0, sphere_mat);
 	world.addObject(s3);
 
 	// add plane
 	const vec3 plane_normal(0.0, 1.0, 0.0);
 	const double plane_const = 2.0;
 	const RGBVec off_white(0.95, 0.95, 0.9);
-	Plane plane(plane_normal, plane_const, off_white);
+	const Material planeMat(off_white, 0.05);
+	Plane plane(plane_normal, plane_const, planeMat);
 	world.addObject(plane);
 
 	for (int i = 0; i < IMG_SIZE; i++) {

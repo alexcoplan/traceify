@@ -12,9 +12,11 @@ public:
  */
 
 // SceneObject virtual destructor definition
-// TODO: experiment with removing this
-// can we make the destructor pure virtual??
 SceneObject::~SceneObject() {}
+
+// Used to contruct the portion of the subclassed
+// objects which is a SceneObject
+SceneObject::SceneObject(Material mat) : material(mat) {}
 
 // note that the `makeCopy` method is necessary to allow us
 // to make a heap-allocated copy of a SceneObject
@@ -26,13 +28,11 @@ SceneObject *Sphere::makeCopy() const 	{ return new Sphere(*this); }
 /* Sphere implementation */
 Sphere::~Sphere() {}
 
-Sphere::Sphere(vec3 c, double r, const RGBVec &k_d) : centre(c), radius(r) {
-	diffuse_colour = k_d;
-}
+Sphere::Sphere(const vec3 &c, double r, const Material &mat) :
+	SceneObject(mat), centre(c), radius(r) {}
 
-Sphere::Sphere(const Sphere &s) : centre(s.centre), radius(s.radius) {
-	diffuse_colour = s.diffuse_colour;
-}
+Sphere::Sphere(const Sphere &s) :
+	SceneObject(s.material), centre(s.centre), radius(s.radius) {}
 
 vec3 Sphere::surfaceNormal(const vec3 &p) {
 	// assume p is a point on the surface of the sphere
@@ -80,13 +80,11 @@ SceneObject *Plane::makeCopy() const 	{ return new Plane(*this); }
 
 Plane::~Plane() {}
 
-Plane::Plane(vec3 norm, double scalar, const RGBVec &k_d) : normal(norm), k(scalar) {
-	diffuse_colour = k_d;
-}
+Plane::Plane(const vec3 &norm, double scalar, const Material &mat) : 
+	SceneObject(mat), normal(norm), k(scalar) {}
 
-Plane::Plane(const Plane &p) : normal(p.normal), k(p.k) {
-       	diffuse_colour = p.diffuse_colour;
-} 
+Plane::Plane(const Plane &p) : 
+	SceneObject(p.material), normal(p.normal), k(p.k) {}
 
 vec3 Plane::surfaceNormal() 			{ return normal; }
 vec3 Plane::surfaceNormal() const 		{ return normal; }

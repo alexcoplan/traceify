@@ -5,11 +5,12 @@
  */
 
 #include "ray.hpp"
-#include "colour.hpp"
+#include "material.hpp"
 
 class SceneObject {
 public:
-	RGBVec diffuse_colour;
+	Material material;
+	SceneObject(Material mat);
 	virtual IntersectionResult intersects(const Ray &r) = 0;
 	virtual SceneObject *makeCopy() = 0;
 	virtual SceneObject *makeCopy() const = 0;
@@ -25,7 +26,7 @@ private:
 
 public:
 	~Sphere();
-	Sphere(vec3 c, double r, const RGBVec &k_d);
+	Sphere(const vec3 &c, double r, const Material &mat);
 	Sphere(const Sphere &s);
 	IntersectionResult intersects(const Ray &r);
 	SceneObject *makeCopy();
@@ -41,7 +42,7 @@ private:
 
 public:
 	~Plane();
-	Plane(vec3 n, double k, const RGBVec &k_d);
+	Plane(const vec3 &n, double k, const Material &mat);
 	Plane(const Plane &p);
 	IntersectionResult intersects(const Ray &r);
 	SceneObject *makeCopy();

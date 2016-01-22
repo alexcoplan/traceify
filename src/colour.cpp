@@ -25,6 +25,10 @@ void RGBVec::normalise() {
 	if (r() > 1.0) setR(1.0);
 	if (g() > 1.0) setG(1.0);
 	if (b() > 1.0) setB(1.0);
+
+	if (r() < 0.0) setR(0.0);
+	if (g() < 0.0) setG(0.0);
+	if (b() < 0.0) setB(0.0);
 }
 
 void RGBVec::scale(double factor) {
@@ -33,11 +37,13 @@ void RGBVec::scale(double factor) {
 }
 
 RGBVec RGBVec::scaled(double factor) {
-	return RGBVec(cvec.scaled(factor));
+	double f = factor > 0.0 ? factor : 0.0;
+	return RGBVec(cvec.scaled(f));
 }
 
 RGBVec RGBVec::scaled(double factor) const {
-	return RGBVec(cvec.scaled(factor));
+	double f = factor > 0.0 ? factor : 0.0;
+	return RGBVec(cvec.scaled(f));
 }
 
 RGBVec RGBVec::multiplyColour(const RGBVec &v) {

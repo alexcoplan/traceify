@@ -2,7 +2,7 @@ CXXFLAGS = -Wall
 
 BIN 	= bin/
 SOURCE 	= src/
-DEPS 	= colour image light viewport ray vec3 geometry world
+DEPS 	= colour image light viewport ray vec3 geometry world material
 SOURCES = $(addprefix $(SOURCE), $(addsuffix .cpp, $(DEPS)) )
 OBJECTS = $(addprefix $(BIN),  $(addsuffix .o, $(DEPS)) )
 EXEC 	= traceify

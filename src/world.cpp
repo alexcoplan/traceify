@@ -60,15 +60,15 @@ RGBColour World::traceRayAt(int i, int j) {
 		return RGBColour(bg_colour);
 	}
 	
-	RGBVec obj_colour(closestObject->diffuse_colour);
-
 	RGBVec result_vec;
 
 	for (std::vector<Light>::iterator lptr = lighting.begin(); lptr != lighting.end(); lptr++) {
 		vec3 intersectionPoint = ray.intersectionPoint(t);
-		double alignment = closestObject->surfaceNormal(intersectionPoint).dot(lptr->lVectorFromPoint(intersectionPoint));
-		double coefficient = alignment > 0.0 ? alignment : 0.0;
-		result_vec += obj_colour.multiplyColour(lptr->colour).scaled(coefficient); 
+		vec3 n = closestObject->surfaceNormal(intersectionPoint);
+		vec3 v = (ray.origin - lptr->pos).normalised();
+		vec3 l = (lptr->pos - intersectionPoint).normalised();
+	
+		result_vec += closestObject->material.shade(*lptr, n, v, l); 
 	}
 
 	D(
