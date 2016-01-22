@@ -1,5 +1,8 @@
 #include "vec3.hpp"
 
+#ifndef RAY_HEADER_WARRIOR
+#define RAY_HEADER_WARRIOR
+
 struct IntersectionResult {
 	bool intersected;
 	double coefficient;
@@ -19,3 +22,5 @@ struct Ray {
 
 	Ray(const vec3& origin, const vec3& direction);
 };
+
+#endif

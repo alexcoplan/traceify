@@ -1,80 +1,9 @@
 #include "world.hpp"
 #include "debug.h"
 
-// DEBUG
-#include <iostream>
-
-// General intersection stuff
-class IntersectionException : public std::runtime_error {
-public:
-	IntersectionException(std::string msg) : std::runtime_error(msg) {}
-};
-
-// SceneObject virtual destructor definition
-SceneObject::~SceneObject() {}
-
-// makeCopy method is necessary to allow us
-// to make a heap-allocated copy of a SceneObject
-// without knowing its type at compile-time
-//
-// since this method is virtual, it achieves that for us
-SceneObject *Sphere::makeCopy() {
-	return new Sphere(*this);
-}
-
-SceneObject *Sphere::makeCopy() const {
-	return new Sphere(*this);
-}
-
-
-// Sphere
-Sphere::Sphere(vec3 c, double r, RGBVec k_d) : centre(c), radius(r) {
-	diffuse_colour = k_d;
-}
-
-// Sphere destructor
-Sphere::~Sphere() {}
-
-// copy constructor
-Sphere::Sphere(const Sphere &s) : centre(s.centre), radius(s.radius) {
-	diffuse_colour = s.diffuse_colour;
-}
-
-vec3 Sphere::surfaceNormal(const vec3 &p) {
-	// assume p is a point on the surface of the sphere
-	return (p - centre).normalised();
-}
-
-vec3 Sphere::surfaceNormal(const vec3 &p) const {
-	// assume p is a point on the surface of the sphere
-	return (p - centre).normalised();
-}
-
-
-IntersectionResult Sphere::intersects(const Ray &ray) {
-	vec3 e = ray.origin;
-	vec3 d = ray.direction;
-	vec3 c = this->centre;
-	double r = this->radius;
-
-	double b = d.dot(e-c);
-	double four_ac = d.dot(d) * (e - c).dot(e-c) - r*r;
-	double discriminant = b*b - four_ac;
-	if (discriminant < 0) return IntersectionResult(); // no intersection
-
-	// just take - of +/-, since we want closest point of intersection
-	double t = (-b - sqrt(discriminant))/(d.dot(d));
-	if (t > 0) return IntersectionResult(t);
-	
-	t = (-b + sqrt(discriminant))/(d.dot(d));
-	if (t > 0) return IntersectionResult(t);
-
-	throw IntersectionException("Negative intersection coefficient");
-}
-
 // World
-World::World(Viewport vp, RGBVec bg, Light the_light) :
-       	viewport(vp), bg_colour(bg), light(the_light),
+World::World(Viewport vp, RGBVec bg) :
+       	viewport(vp), bg_colour(bg),
 	uAxis(1.0,0.0,0.0), // set up camera basis
 	vAxis(0.0,1.0,0.0),
 	wAxis(0.0,0.0,-1.0),
@@ -86,9 +15,13 @@ World::~World() {
 	}
 }
 
-void World::addObject(SceneObject const &s) {
+void World::addObject(const SceneObject &s) {
 	SceneObject *obj = s.makeCopy();
 	scenery.push_back(obj);
+}
+
+void World::addLight(const Light &l) {
+	lighting.push_back(l);
 }
 
 RGBColour World::traceRayAt(int i, int j) {
@@ -96,13 +29,6 @@ RGBColour World::traceRayAt(int i, int j) {
 	double vValue = viewport.vAmount(j);
 	double d = viewport.getViewingDistance();
 	vec3 direction = wAxis.scaled(-d) + uAxis.scaled(uValue) + vAxis.scaled(vValue);	
-	/*
-	D(
-		if (i % 50 == 0 && j % 50 == 0) {
-			std::cout << "Casting ray (" << i << "," << j << ") " << "in direction: ";
-			direction.debug_print();
-		}
-	)*/
 
 	Ray ray(cameraPosition, direction); 
 
@@ -120,12 +46,11 @@ RGBColour World::traceRayAt(int i, int j) {
 			}
 			else if (intersection.coefficient < t) {
 				closestObject = scene_obj;
-				intersection.coefficient = t;
+				t = intersection.coefficient;
 			}
 		}	
 	}
 
-	 
 	D(
 		if (i % 50 == 0 && j % 50 == 0 && closestObject != NULL)
 			std::cout << "Intersection at (" << i << "," << j << ")!, t = " << t << std::endl;
@@ -137,11 +62,14 @@ RGBColour World::traceRayAt(int i, int j) {
 	
 	RGBVec obj_colour(closestObject->diffuse_colour);
 
-	vec3 intersectionPoint = ray.intersectionPoint(t);
-	double alignment = closestObject->surfaceNormal(intersectionPoint).dot(light.lVectorFromPoint(intersectionPoint));
-	double coefficient = alignment > 0.0 ? alignment : 0.0;
+	RGBVec result_vec;
 
-	RGBVec result_vec(obj_colour.multiplyColour(light.colour).scaled(coefficient)); 
+	for (std::vector<Light>::iterator lptr = lighting.begin(); lptr != lighting.end(); lptr++) {
+		vec3 intersectionPoint = ray.intersectionPoint(t);
+		double alignment = closestObject->surfaceNormal(intersectionPoint).dot(lptr->lVectorFromPoint(intersectionPoint));
+		double coefficient = alignment > 0.0 ? alignment : 0.0;
+		result_vec += obj_colour.multiplyColour(lptr->colour).scaled(coefficient); 
+	}
 
 	D(
 		if (i % 50 == 0 && j % 50 == 0) {

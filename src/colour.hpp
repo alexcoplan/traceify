@@ -53,6 +53,13 @@ public:
 	RGBVec multiplyColour(const RGBVec &v);
 	RGBVec multiplyColour(const RGBVec &v) const;
 
+	RGBVec operator=(const RGBVec&);
+	RGBVec operator+(const RGBVec&);
+	RGBVec operator+(const RGBVec&) const;
+	RGBVec operator-(const RGBVec&);
+	RGBVec operator-(const RGBVec&) const;
+	void operator+=(const RGBVec&);
+
 	D(void debug_print();)
 };	
 

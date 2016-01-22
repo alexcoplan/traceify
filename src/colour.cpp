@@ -2,9 +2,9 @@
 
 // RGBVec: constructors
 RGBVec::RGBVec() : cvec(0.0,0.0,0.0) {} // default to black
-RGBVec::RGBVec(const vec3 &v) : cvec(v) {}
-RGBVec::RGBVec(const RGBVec &rgbv) : cvec(rgbv.cvec) {}
-RGBVec::RGBVec(double r, double g, double b) : cvec(r,g,b) {}
+RGBVec::RGBVec(const vec3 &v) : cvec(v) { normalise(); }
+RGBVec::RGBVec(const RGBVec &rgbv) : cvec(rgbv.cvec) { normalise(); }
+RGBVec::RGBVec(double r, double g, double b) : cvec(r,g,b) { normalise(); }
 
 // RGBVec: accessors
 double RGBVec::r() { return cvec.x(); }
@@ -46,6 +46,31 @@ RGBVec RGBVec::multiplyColour(const RGBVec &v) {
 
 RGBVec RGBVec::multiplyColour(const RGBVec &v) const {
 	return RGBVec(r() * v.r(), g() * v.g(), b() * v.b());
+}
+
+RGBVec RGBVec::operator=(const RGBVec &b) {
+	cvec = b.cvec;
+	return *this;
+}
+
+RGBVec RGBVec::operator+(const RGBVec &b) { 
+	return RGBVec(cvec + b.cvec); 
+}
+
+RGBVec RGBVec::operator+(const RGBVec &b) const {
+	return RGBVec(cvec + b.cvec);
+}
+
+RGBVec RGBVec::operator-(const RGBVec &b) {
+	return RGBVec(cvec - b.cvec);
+}
+
+RGBVec RGBVec::operator-(const RGBVec &b) const {
+	return RGBVec(cvec - b.cvec);
+}
+
+void RGBVec::operator+=(const RGBVec &b) {
+	*this = *this + b;
 }
 
 D(
