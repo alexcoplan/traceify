@@ -9,13 +9,13 @@
 
 #define IMG_SIZE 500
 #define CAMERA_WIDTH 0.1
-#define VIEWING_DISTANCE 0.2
+#define VIEWING_DISTANCE 0.25
 #define SPHERE_RADIUS 0.4
 
 
 void trace_dem_rays()
 {
-	const double sphere_distance = 25.0;
+	const double sphere_distance = 30.0;
 
 	World world(
 			Viewport(IMG_SIZE, CAMERA_WIDTH, VIEWING_DISTANCE), 	// camera/viewport setup
@@ -34,7 +34,7 @@ void trace_dem_rays()
 	Material sphere_mat(RGBVec(0.0,1.0,0.0), 32.0, 0.05);
 
 	// green sphere
-	vec3 sphere_centre(-2.0,0.0,sphere_distance-1.5);
+	vec3 sphere_centre(-2.0,0.1,sphere_distance-1.5);
 	Sphere s(sphere_centre, SPHERE_RADIUS, sphere_mat); 
 	world.addObject(s);
 
@@ -44,7 +44,8 @@ void trace_dem_rays()
 	Sphere s2(s2_centre, SPHERE_RADIUS, sphere_mat);
 	world.addObject(s2);
 
-	const vec3 s3_centre(0.0,-0.6,10.0);
+	// blue sphere
+	const vec3 s3_centre(0.0,-1.0,10.0);
 	sphere_mat.setMaterialColour(RGBVec(0.0,0.0,1.0));
 	Sphere s3(s3_centre, SPHERE_RADIUS/3.0, sphere_mat);
 	world.addObject(s3);
@@ -59,7 +60,7 @@ void trace_dem_rays()
 
 	for (int i = 0; i < IMG_SIZE; i++) {
 		for (int j = 0; j < IMG_SIZE; j++) {
-			img[i][j] = world.traceRayAt(i,j);
+			img[i][j] = world.colourForPixelAt(i,j);
 		}
 	}
 

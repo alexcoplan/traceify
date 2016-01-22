@@ -24,14 +24,19 @@ void World::addLight(const Light &l) {
 	lighting.push_back(l);
 }
 
-RGBColour World::traceRayAt(int i, int j) {
-	double uValue = viewport.uAmount(i);
-	double vValue = viewport.vAmount(j);
-	double d = viewport.getViewingDistance();
-	vec3 direction = wAxis.scaled(-d) + uAxis.scaled(uValue) + vAxis.scaled(vValue);	
+// returns true if under shadow
+bool World::traceShadowRay(const Ray &ray) {
+	const double shadow_eps = 0.0001;
 
-	Ray ray(cameraPosition, direction); 
+	for (std::vector<SceneObject*>::iterator it = scenery.begin(); it != scenery.end(); it++) {
+		IntersectionResult iResult = (*it)->intersects(ray);
+		if (iResult.intersected && iResult.coefficient > shadow_eps) return true;
+	}
+	return false;
+}
 
+
+RGBVec World::traceRay(const Ray &ray) {
 	const SceneObject *closestObject = NULL;
 	double t = 0.0; 
 
@@ -51,33 +56,34 @@ RGBColour World::traceRayAt(int i, int j) {
 		}	
 	}
 
-	D(
-		if (i % 50 == 0 && j % 50 == 0 && closestObject != NULL)
-			std::cout << "Intersection at (" << i << "," << j << ")!, t = " << t << std::endl;
-	)
-
 	if (closestObject == NULL) {
-		return RGBColour(bg_colour);
+		return bg_colour; 
 	}
 	
 	RGBVec result_vec;
 
 	for (std::vector<Light>::iterator lptr = lighting.begin(); lptr != lighting.end(); lptr++) {
-		vec3 intersectionPoint = ray.intersectionPoint(t);
-		vec3 n = closestObject->surfaceNormal(intersectionPoint);
+		vec3 p = ray.intersectionPoint(t);
+		vec3 n = closestObject->surfaceNormal(p);
 		vec3 v = (ray.origin - lptr->pos).normalised();
-		vec3 l = (lptr->pos - intersectionPoint).normalised();
-	
-		result_vec += closestObject->material.shade(*lptr, n, v, l); 
-	}
+		vec3 l = (lptr->pos - p).normalised();
 
-	D(
-		if (i % 50 == 0 && j % 50 == 0) {
-			std::cout << "Colour = ";
-			result_vec.debug_print();
-			std::cout << std::endl;
-		}
-	)
+		Ray shadowRay(p,l);
 	
-	return RGBColour(result_vec);
+		// if we're not in shadow w.r.t this light
+		if (!traceShadowRay(shadowRay))
+			result_vec += closestObject->material.shade(*lptr, n, v, l); 
+	}
+	
+	return result_vec; 
+}	
+
+RGBColour World::colourForPixelAt(int i, int j) {
+	double uValue = viewport.uAmount(i);
+	double vValue = viewport.vAmount(j);
+	double d = viewport.getViewingDistance();
+	vec3 direction = wAxis.scaled(-d) + uAxis.scaled(uValue) + vAxis.scaled(vValue);	
+
+	Ray theRay(cameraPosition, direction);
+	return  RGBColour(traceRay(theRay));
 }	

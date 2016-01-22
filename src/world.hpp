@@ -22,7 +22,9 @@ public:
 	World(Viewport, RGBVec bg_colour); 
 	void addObject(const SceneObject&);
 	void addLight(const Light&);
-	RGBColour traceRayAt(int i, int j);
+	RGBVec traceRay(const Ray &r);
+	bool traceShadowRay(const Ray &r);
+	RGBColour colourForPixelAt(int i, int j);
 
 private:
 	std::vector<SceneObject*> scenery;

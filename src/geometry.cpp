@@ -63,7 +63,7 @@ IntersectionResult Sphere::intersects(const Ray &ray) {
 	t = (-b + sqrt(discriminant))/(d.dot(d));
 	if (t > 0) return IntersectionResult(t);
 
-	throw IntersectionException("Negative intersection coefficient");
+	return IntersectionResult(); // do not count negative intersection
 }
 
 /* Plane implementation
