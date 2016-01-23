@@ -5,12 +5,12 @@
 #define MAX_TRACE_DEPTH 3
 
 // World
-World::World(Viewport vp, RGBVec bg) :
+World::World(Viewport vp, const vec3 &camPos, const RGBVec &bg) :
        	viewport(vp), bg_colour(bg),
 	uAxis(1.0,0.0,0.0), // set up camera basis
 	vAxis(0.0,1.0,0.0),
 	wAxis(0.0,0.0,-1.0),
-	cameraPosition(0.0,0.0,-0.1) {}
+	cameraPosition(camPos) {}
 
 World::~World() {
 	for (size_t i = 0; i < scenery.size(); i++) {
@@ -26,6 +26,26 @@ void World::addObject(const SceneObject &s) {
 void World::addLight(const Light &l) {
 	lighting.push_back(l);
 }
+
+// Camera stuff
+void World::cameraRotateY(double theta) {
+	double sin_theta = sin(theta);
+	double cos_theta = cos(theta);
+	vec3 uPrime = uAxis.scaled(cos_theta) + wAxis.scaled(sin_theta);
+	vec3 wPrime = uAxis.scaled(-sin_theta) + wAxis.scaled(cos_theta);
+	uAxis = uPrime;
+	wAxis = wPrime;
+}
+
+void World::cameraRotateX(double theta) {
+	double sin_theta = sin(theta);
+	double cos_theta = cos(theta);
+	vec3 vPrime = vAxis.scaled(cos_theta) + wAxis.scaled(sin_theta);
+	vec3 wPrime = vAxis.scaled(-sin_theta) + wAxis.scaled(cos_theta);
+	vAxis = vPrime;
+	wAxis = wPrime;
+}
+
 
 // returns true if under shadow
 bool World::traceShadowRay(const Ray &ray) {

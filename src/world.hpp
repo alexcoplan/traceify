@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <string>
+#include <cmath>
 
 #include "ray.hpp"
 #include "viewport.hpp"
@@ -19,18 +20,21 @@ public:
 	RGBVec bg_colour;
 
 	~World();
-	World(Viewport, RGBVec bg_colour); 
+	World(Viewport, const vec3 &cameraPos, const RGBVec &bg_colour); 
 	void addObject(const SceneObject&);
 	void addLight(const Light&);
 	RGBVec traceRay(const Ray &r, double t_min, int depth);
 	bool traceShadowRay(const Ray &r);
 	RGBColour colourForPixelAt(int i, int j);
 
+	void cameraRotateY(double theta);
+	void cameraRotateX(double theta);
+
 private:
 	std::vector<SceneObject*> scenery;
 	std::vector<Light> lighting;
-	const vec3 uAxis;
-	const vec3 vAxis;
-	const vec3 wAxis;
-	const vec3 cameraPosition;
+	vec3 uAxis;
+	vec3 vAxis;
+	vec3 wAxis;
+	vec3 cameraPosition;
 };

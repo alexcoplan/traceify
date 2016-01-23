@@ -7,7 +7,8 @@
 #include "world.hpp"
 #include "image.hpp"
 
-#define IMG_SIZE 1000
+#define IMG_WIDTH 1000
+#define IMG_HEIGHT 800
 #define CAMERA_WIDTH 0.1
 #define VIEWING_DISTANCE 0.25
 #define SPHERE_RADIUS 0.4
@@ -18,62 +19,38 @@ void trace_dem_rays()
 	const double sphere_distance = 30.0;
 
 	World world(
-			Viewport(IMG_SIZE, CAMERA_WIDTH, VIEWING_DISTANCE), 	// camera/viewport setup
-			RGBVec()					    	// background colour (init black)		
+			Viewport(IMG_WIDTH, IMG_HEIGHT, CAMERA_WIDTH, VIEWING_DISTANCE), 
+			vec3(-9.0, 4.0, -0.1), // camera position
+			RGBVec()					    
 	);
 
-	Light l1(vec3(-3.0,2.0,sphere_distance-10.0), RGBVec(0.5,0.5,0.5));
-	Light l2(vec3(1.0,3.0,6.0), RGBVec(0.5,0.5,0.5));
-	Light backLight(vec3(1.0,10.0,30.0), RGBVec(0.8,0.8,0.8));
+	// Camera Setup
+	world.cameraRotateY(0.3); // ~10 degrees to the right
+	world.cameraRotateX(-0.08);
+
+	// Lighting Setup
+	Light l1(vec3(3.0,5.0,sphere_distance-10.0), RGBVec(0.5,0.5,0.5));
+	Light l2(vec3(1.0,5.0,5.0), RGBVec(0.5,0.5,0.5));
+	Light top1(vec3(0.0,5.0,sphere_distance), RGBVec(0.4,0.4,0.4));
+	Light top2(vec3(0.0,5.0,sphere_distance - 2.0), RGBVec(0.4,0.4,0.4));
+	
 	world.addLight(l1);
 	world.addLight(l2);
-	world.addLight(backLight);
+	world.addLight(top1);
+	world.addLight(top2);
 	
 	Image img(world.viewport.pixelsWide(), world.viewport.pixelsTall());
-
-	// base material for spheres: specularity 2.0, ambient 0.05 
-	// this mateiral is green, we should change this for each sphere
-	Material sphere_mat(RGBVec(0.0,0.8,0.0), RGBVec(0.2,0.2,0.2), 32.0, 0.05);
-	sphere_mat.reflective = false;
-
-	/*
-	// green sphere
-	vec3 sphere_centre(-2.0,0.0,sphere_distance-1.5);
-	Sphere s(sphere_centre, SPHERE_RADIUS, sphere_mat); 
-	world.addObject(s);
-
-	// red sphere
-	const vec3 s2_centre(2.0,0.0,sphere_distance+2.0);
-	sphere_mat.material_colour = RGBVec(1.0,0.0,0.0);
-	Sphere s2(s2_centre, SPHERE_RADIUS, sphere_mat);
-	//world.addObject(s2);
-
-	// blue sphere
-	const vec3 s3_centre(-2.0,-1.0,20.0);
-	sphere_mat.material_colour = RGBVec(0.0,0.0,1.0);
-	Sphere s3(s3_centre, SPHERE_RADIUS/3.0, sphere_mat);
-	//world.addObject(s3);
-	*/
 
 	// floor plane
 	const vec3 floor_normal(0.0, 1.0, 0.0);
 	const double plane_const = 2.0;
-	const RGBVec kinda_blue(0.8, 0.8, 1.0);
-	const RGBVec plane_reflect(0.4,0.4,0.4);
-	Material planeMat(kinda_blue, plane_reflect, 0.0, 0.0, true);
+	const RGBVec kinda_blue(0.6, 0.6, 0.8);
+	const RGBVec plane_reflect(0.1,0.1,0.1);
+	Material planeMat(kinda_blue, plane_reflect, 0.0, 0.0, false);
 	Plane floor_plane(floor_normal, plane_const, planeMat);
 	world.addObject(floor_plane);
 
-	/*
-	// back plane
-	const vec3 back_normal(0.0, 0.0, -1.0);
-	const double back_const = 40.0;
-	const RGBVec backing_colour = RGBVec(0.15,0.15,0.2);
-	Material backMat(backing_colour, plane_reflect, 0.0, 0.0, false);
-	Plane back_plane(back_normal, back_const, backMat);
-	world.addObject(back_plane);
-	*/
-
+	
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			for (int k = 0; k < 3; k++) {
@@ -89,15 +66,16 @@ void trace_dem_rays()
 				D( std::cerr << "colour: "; )
 				D( col.debug_print(); )
 				RGBVec spec(0.2, 0.2, 0.2);
-				Material mat(col,spec,0.0,0.0,true); 
+				Material mat(col,spec,0.0,0.0,false); // relections disabled for now 
 				Sphere s(pos, 0.2, mat);
 				world.addObject(s);
 			}
 		}
 	}
 
-	for (int i = 0; i < IMG_SIZE; i++) {
-		for (int j = 0; j < IMG_SIZE; j++) {
+
+	for (int i = 0; i < world.viewport.pixelsWide(); i++) {
+		for (int j = 0; j < world.viewport.pixelsTall(); j++) {
 			img[i][j] = world.colourForPixelAt(i,j);
 		}
 	}

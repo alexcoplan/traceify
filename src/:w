@@ -15,14 +15,8 @@ Viewport::Viewport(int sq_pixels, double sq_across, double viewing_distance) :
 Viewport::Viewport(int pixWidth, int pixHeight, double camera_across, double viewing_distance) :
 	n_x(pixWidth), n_y(pixHeight), d(viewing_distance)
 {
-	double camera_height = camera_across * static_cast<double>(pixHeight)/static_cast<double>(pixWidth);
 	l = -0.5 * camera_across;
 	r = 0.5 * camera_across;
-	t = 0.5 * camera_height;
-	b = -0.5 * camera_height;
-	uSpread = (r-l)/static_cast<double>(n_x);
-	vSpread = (t-b)/static_cast<double>(n_y);
-}
 
 double Viewport::uAmount(int i) {
 	return l + uSpread * (static_cast<double>(i) + 0.5);	

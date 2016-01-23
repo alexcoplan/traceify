@@ -18,12 +18,12 @@ Image::~Image() {
 }
 
 RGBColour *Image::operator[](int i) {
-	if (i > height) throw OutOfImageException(i);
+	if (i > width) throw OutOfImageException(i);
 	return img[i];
 }
 
 RGBColour *Image::operator[](int i) const {
-	if (i > height) throw OutOfImageException(i);
+	if (i > width) throw OutOfImageException(i);
 	return img[i];
 }
 

@@ -13,6 +13,7 @@ private:
 public:
 	// this is a shortcut for initialising a square viewport
 	Viewport(int sq_pixels, double sq_across, double viewing_distance);
+	Viewport(int pixWidth, int pixHeight, double camera_across, double viewing_distance);
 
 	/* a note about axes:
 	 *

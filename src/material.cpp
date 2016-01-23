@@ -39,10 +39,7 @@ Material::Material(const RGBVec &matcolour, const RGBVec &speccolour, double spe
 	specularity(spec),
 	ambient(amb),
 	material_colour(matcolour),
-	specular_colour(speccolour) 
-{
-	D( std::cerr << "just created a material with reflectivity: " << reflective; )
-}
+	specular_colour(speccolour) {}
 
 
 RGBVec Material::shade(const Light &light, const vec3 &n, const vec3 &v, const vec3 &l) const {
