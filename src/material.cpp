@@ -1,5 +1,6 @@
 #include <cmath>
 #include "material.hpp"
+#include "debug.h"
 
 Material::Material(const Material& m) {
 	diffuse = m.diffuse;
@@ -7,6 +8,7 @@ Material::Material(const Material& m) {
 	ambient = m.ambient;
 	material_colour = m.material_colour;
 	specular_colour = m.specular_colour;
+	reflective = m.reflective;
 }
 
 // No Shader (constant colour => Full Ambient Only)
@@ -30,6 +32,19 @@ Material::Material(const RGBVec &matcolour, const RGBVec &speccolour, double spe
 	material_colour(matcolour), 
 	specular_colour(speccolour) {}
 
+// Full Shader with reflection
+Material::Material(const RGBVec &matcolour, const RGBVec &speccolour, double spec, double amb, bool reflect) :
+	diffuse(true),
+	reflective(reflect),
+	specularity(spec),
+	ambient(amb),
+	material_colour(matcolour),
+	specular_colour(speccolour) 
+{
+	D( std::cerr << "just created a material with reflectivity: " << reflective; )
+}
+
+
 RGBVec Material::shade(const Light &light, const vec3 &n, const vec3 &v, const vec3 &l) const {
 	RGBVec result = material_colour.scaled(ambient);
 	if (diffuse) 
@@ -48,15 +63,12 @@ RGBVec Material::shade(const Light &light, const vec3 &n, const vec3 &v, const v
 	return const_cast<const Material*>(this)->shade(light,n,v,l);
 }
 
-void Material::setMaterialColour(const RGBVec &c) {
-	material_colour = c;
-}
-
 void Material::operator=(const Material &m) {
 	diffuse = m.diffuse;
 	specularity = m.specularity;
 	ambient = m.ambient;
 	material_colour = m.material_colour;
 	specular_colour = m.specular_colour;
+	reflective = m.reflective;
 }
 

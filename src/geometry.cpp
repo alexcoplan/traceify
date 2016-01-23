@@ -25,6 +25,16 @@ SceneObject::SceneObject(Material mat) : material(mat) {}
 SceneObject *Sphere::makeCopy() 	{ return new Sphere(*this); }
 SceneObject *Sphere::makeCopy() const 	{ return new Sphere(*this); }
 
+std::string SceneObject::tag() { return "SceneObject"; }
+std::string Sphere::tag() { return "Sphere"; }
+std::string Plane::tag() { return "Plane"; }
+
+std::string SceneObject::tag() const { return "SceneObject"; }
+std::string Sphere::tag() const { return "Sphere"; }
+std::string Plane::tag() const { return "Plane"; }
+
+
+
 /* Sphere implementation */
 Sphere::~Sphere() {}
 
@@ -60,9 +70,6 @@ IntersectionResult Sphere::intersects(const Ray &ray) {
 	double t = (-b - sqrt(discriminant))/(d.dot(d));
 	if (t > 0) return IntersectionResult(t);
 	
-	t = (-b + sqrt(discriminant))/(d.dot(d));
-	if (t > 0) return IntersectionResult(t);
-
 	return IntersectionResult(); // do not count negative intersection
 }
 

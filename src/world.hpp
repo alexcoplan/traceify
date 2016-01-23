@@ -22,7 +22,7 @@ public:
 	World(Viewport, RGBVec bg_colour); 
 	void addObject(const SceneObject&);
 	void addLight(const Light&);
-	RGBVec traceRay(const Ray &r);
+	RGBVec traceRay(const Ray &r, double t_min, int depth);
 	bool traceShadowRay(const Ray &r);
 	RGBColour colourForPixelAt(int i, int j);
 

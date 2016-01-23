@@ -1,8 +1,9 @@
 #ifndef DEBUG_INCLUDE_WARRIOR
 #define DEBUG_INCLUDE_WARRIOR
 
-#ifdef DEBUG
 #include <iostream>
+
+#ifdef DEBUG
 #define D(x) x
 #else
 #define D(x)

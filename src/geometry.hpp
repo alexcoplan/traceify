@@ -16,6 +16,8 @@ public:
 	virtual SceneObject *makeCopy() const = 0;
 	virtual vec3 surfaceNormal(const vec3 &point) = 0;
 	virtual vec3 surfaceNormal(const vec3 &point) const = 0;
+	virtual std::string tag(); // for debugging
+	virtual std::string tag() const;
 	virtual ~SceneObject();
 };
 
@@ -33,6 +35,8 @@ public:
 	SceneObject *makeCopy() const;
 	vec3 surfaceNormal(const vec3 &point);
 	vec3 surfaceNormal(const vec3 &point) const;
+	std::string tag();
+	std::string tag() const;
 };
 
 class Plane : public SceneObject {
@@ -51,5 +55,7 @@ public:
 	vec3 surfaceNormal() const;
 	vec3 surfaceNormal(const vec3&); // still need to override the pure virtuals though
 	vec3 surfaceNormal(const vec3&) const;
+	std::string tag();
+	std::string tag() const;
 };
 
