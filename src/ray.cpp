@@ -2,6 +2,8 @@
 
 IntersectionResult::IntersectionResult() : intersected(false) {} // default to false
 IntersectionResult::IntersectionResult(double t) : intersected(true), coefficient(t) {}
+IntersectionResult::IntersectionResult(const IntersectionResult &ir) :
+	intersected(ir.intersected), coefficient(ir.coefficient) {}
 
 Ray::Ray(const vec3& o, const vec3& d) : origin(o), direction(d) {}
 

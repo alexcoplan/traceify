@@ -1,4 +1,5 @@
 CXXFLAGS = -Wall 
+OPTFLAGS = -O3 -flto -march=native 
 
 BIN 	= bin/
 SOURCE 	= src/
@@ -9,6 +10,7 @@ EXEC 	= traceify
 MAIN    = $(SOURCE)$(EXEC).cpp
 
 all: $(SOURCES) $(EXEC)
+all: CXXFLAGS += $(OPTFLAGS)
 
 debug: CXXFLAGS += -g -DDEBUG
 debug: $(SOURCES) $(EXEC)

@@ -13,14 +13,13 @@
 #define VIEWING_DISTANCE 0.25
 #define SPHERE_RADIUS 0.4
 
-
 void trace_dem_rays()
 {
 	const double sphere_distance = 30.0;
 
 	World world(
 			Viewport(IMG_WIDTH, IMG_HEIGHT, CAMERA_WIDTH, VIEWING_DISTANCE), 
-			vec3(-9.0, 4.0, -0.1), // camera position
+			vec3(-8.8, 4.5, -0.1), // camera position
 			RGBVec()					    
 	);
 
@@ -29,15 +28,17 @@ void trace_dem_rays()
 	world.cameraRotateX(-0.08);
 
 	// Lighting Setup
-	Light l1(vec3(3.0,5.0,sphere_distance-10.0), RGBVec(0.5,0.5,0.5));
+	Light l1(vec3(3.0,5.0,sphere_distance-10.0), RGBVec(0.4,0.4,0.4));
 	Light l2(vec3(1.0,5.0,5.0), RGBVec(0.5,0.5,0.5));
-	Light top1(vec3(0.0,5.0,sphere_distance), RGBVec(0.4,0.4,0.4));
+	Light top1(vec3(0.0,5.0,sphere_distance), RGBVec(0.2,0.2,0.2));
 	Light top2(vec3(0.0,5.0,sphere_distance - 2.0), RGBVec(0.4,0.4,0.4));
+	Light back(vec3(0.0,3.0,sphere_distance+20.0), RGBVec(0.4,0.4,0.4));
 	
 	world.addLight(l1);
 	world.addLight(l2);
 	world.addLight(top1);
 	world.addLight(top2);
+	world.addLight(back);
 	
 	Image img(world.viewport.pixelsWide(), world.viewport.pixelsTall());
 
@@ -50,6 +51,7 @@ void trace_dem_rays()
 	Plane floor_plane(floor_normal, plane_const, planeMat);
 	world.addObject(floor_plane);
 
+	Cluster sphereGroup;
 	
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
@@ -57,7 +59,7 @@ void trace_dem_rays()
 				double a = (double)i;
 				double b = (double)j;
 				double c = (double)k;
-				vec3 pos(-1.0 + a*2.0, b*2.0 - 1.0, sphere_distance + c*2.0);
+				vec3 pos(-1.0 + a*2.0, b*2.0, sphere_distance + c*2.0);
 				D( std::cerr << "adding sphere @ "; )
 				D( pos.debug_print(); )
 
@@ -66,13 +68,14 @@ void trace_dem_rays()
 				D( std::cerr << "colour: "; )
 				D( col.debug_print(); )
 				RGBVec spec(0.2, 0.2, 0.2);
-				Material mat(col,spec,0.0,0.0,false); // relections disabled for now 
-				Sphere s(pos, 0.2, mat);
-				world.addObject(s);
+				Material mat(col,spec,0.0,0.0,true); // relections disabled for now 
+				Sphere s(pos, 0.8, mat);
+				sphereGroup.addObject(s);
 			}
 		}
 	}
 
+	world.addObject(sphereGroup);
 
 	for (int i = 0; i < world.viewport.pixelsWide(); i++) {
 		for (int j = 0; j < world.viewport.pixelsTall(); j++) {

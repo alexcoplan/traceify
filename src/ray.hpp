@@ -9,6 +9,7 @@ struct IntersectionResult {
 
 	IntersectionResult();		// default, false result
 	IntersectionResult(double); 	// true result
+	IntersectionResult(const IntersectionResult &);
 };
 
 struct Ray {

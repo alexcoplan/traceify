@@ -4,24 +4,91 @@
  * we can intersect with
  */
 
+#include <vector>
+
 #include "ray.hpp"
 #include "material.hpp"
 
+struct BoundingBox {
+	double x_min;
+	double x_max;
+	double y_min;
+	double y_max;
+	double z_min;
+	double z_max;
+
+	BoundingBox();
+	void swallow(const BoundingBox &b);
+};
+
 class SceneObject {
 public:
-	Material material;
-	SceneObject(Material mat);
 	virtual IntersectionResult intersects(const Ray &r) = 0;
+	virtual IntersectionResult intersects(const Ray &r) const = 0;
 	virtual SceneObject *makeCopy() = 0;
 	virtual SceneObject *makeCopy() const = 0;
-	virtual vec3 surfaceNormal(const vec3 &point) = 0;
-	virtual vec3 surfaceNormal(const vec3 &point) const = 0;
 	virtual std::string tag(); // for debugging
 	virtual std::string tag() const;
+	virtual bool isCluster() = 0;
+	virtual bool isCluster() const = 0;
+	virtual BoundingBox getBoundBox() = 0;
+	virtual BoundingBox getBoundBox() const = 0;
 	virtual ~SceneObject();
 };
 
-class Sphere : public SceneObject {
+struct IntersectionDatum : public IntersectionResult {
+	SceneObject *intersectedObj;
+	IntersectionDatum();
+	IntersectionDatum(double t, SceneObject *obj);
+};
+
+struct GeometryException : public std::runtime_error {
+	GeometryException(std::string msg);
+};
+
+// if we have many objects that are close together
+// then we can group them to a cluster
+//
+// this can greatly improve efficiency by first checking if the ray
+// intersects this bounding box, and only then checking if it intersects
+// each of the individual objets in the cluster 
+class Cluster : public SceneObject {
+private:
+	BoundingBox bb;
+
+public:
+	std::vector<SceneObject *> boundedObjects; 
+	
+	// overriden methods:
+	bool isCluster();
+	bool isCluster() const;
+	IntersectionResult intersects(const Ray &r);
+	IntersectionResult intersects(const Ray &r) const;
+	SceneObject *makeCopy();
+	SceneObject *makeCopy() const;
+	std::string tag();
+	std::string tag() const;
+	BoundingBox getBoundBox();
+	BoundingBox getBoundBox() const;
+
+	// specific methods
+	Cluster();
+	Cluster(const Cluster &);
+	void addObject(const SceneObject &);
+	~Cluster();
+};
+
+class ShadableObject : public SceneObject {
+public:
+	Material material;
+	ShadableObject(Material mat);
+	virtual vec3 surfaceNormal(const vec3 &point) = 0;
+	virtual vec3 surfaceNormal(const vec3 &point) const = 0;
+	bool isCluster();
+	bool isCluster() const; 
+};
+
+class Sphere : public ShadableObject {
 private:
 	const vec3 centre;
 	const double radius;
@@ -31,15 +98,18 @@ public:
 	Sphere(const vec3 &c, double r, const Material &mat);
 	Sphere(const Sphere &s);
 	IntersectionResult intersects(const Ray &r);
+	IntersectionResult intersects(const Ray &r) const;
 	SceneObject *makeCopy();
 	SceneObject *makeCopy() const;
 	vec3 surfaceNormal(const vec3 &point);
 	vec3 surfaceNormal(const vec3 &point) const;
 	std::string tag();
 	std::string tag() const;
+	BoundingBox getBoundBox();
+	BoundingBox getBoundBox() const;
 };
 
-class Plane : public SceneObject {
+class Plane : public ShadableObject {
 private:
 	const vec3 normal;
 	const double k;
@@ -49,6 +119,7 @@ public:
 	Plane(const vec3 &n, double k, const Material &mat);
 	Plane(const Plane &p);
 	IntersectionResult intersects(const Ray &r);
+	IntersectionResult intersects(const Ray &r) const;
 	SceneObject *makeCopy();
 	SceneObject *makeCopy() const;
 	vec3 surfaceNormal(); // since a plane has one normal everywhere
@@ -57,5 +128,8 @@ public:
 	vec3 surfaceNormal(const vec3&) const;
 	std::string tag();
 	std::string tag() const;
+	BoundingBox getBoundBox();
+	BoundingBox getBoundBox() const;
 };
+
 
