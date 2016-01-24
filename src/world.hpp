@@ -14,6 +14,8 @@
 #include "light.hpp"
 #include "geometry.hpp"
 
+enum SuperSamplingMode { ss_off, ss_on }; // TODO: add ss_adaptive
+
 class World {
 public:
 	Viewport viewport;

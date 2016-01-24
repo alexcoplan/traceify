@@ -204,54 +204,57 @@ double max(double a, double b, double c) {
 	return a > b ? (c > a ? c : a) : (c > b ? c : b);
 }
 
+// TODO: optimise this
 IntersectionResult Cluster::intersects(const Ray &ray) const {
-	vec3 e = ray.origin;
-	vec3 d = ray.direction;
-	
-	double t_x_min;
-	double t_x_max;
+	const vec3 e = ray.origin;
+       	const vec3 d = ray.direction;
 
-	double a = 1.0 / d.x();
-	if (a >= 0) {
-		t_x_min = a*(bb.x_min - e.x());
-		t_x_max = a*(bb.x_max - e.x());
-	}
-	else {
-		t_x_min = a*(bb.x_max - e.x());
-		t_x_max = a*(bb.x_min - e.x());
+	double t_min = (bb.x_min - e.x()) / d.x();
+	double t_max = (bb.x_max - e.x()) / d.x();
+
+	if (t_min > t_max) {
+		double tmp = t_max;
+		t_max = t_min;
+		t_min = tmp;
 	}
 
-	double t_y_min;
-	double t_y_max;
+	double t_y_min = (bb.y_min - e.y()) / d.y();
+	double t_y_max = (bb.y_max - e.y()) / d.y();
 
-	a = 1.0 / d.y();
-	if (a >= 0) {
-		t_y_min = a*(bb.y_min - e.y());
-		t_y_max = a*(bb.y_max - e.y());
-	}
-	else {
-		t_y_min = a*(bb.y_max - e.y());
-		t_y_max = a*(bb.y_min - e.y());
+	if (t_y_min > t_y_max) {
+		double tmp = t_y_max;
+		t_y_max = t_y_min;
+		t_y_min = tmp;
 	}
 
-	double t_z_min;
-	double t_z_max;
-
-	a = 1.0 / d.z();
-	if (a >= 0) {
-		t_z_min = a*(bb.z_min - e.z());
-		t_z_max = a*(bb.z_max - e.z());
-	}
-	else {
-		t_z_min = a*(bb.z_max - e.z());
-		t_z_max = a*(bb.z_min - e.z());
-	}
-
-	if (t_x_min > t_y_max || t_x_min > t_z_max
-	 || t_y_min > t_x_max || t_y_min > t_z_max
-	 || t_z_min > t_x_max || t_z_min > t_y_max )
+	if ((t_min > t_y_max) || (t_y_min > t_max))
 		return IntersectionResult();
-	return IntersectionResult(max(t_x_min, t_y_min, t_z_min));
+
+	if (t_y_min > t_min)
+		t_min = t_y_min;
+
+	if (t_y_max < t_max)
+		t_max = t_y_max;
+
+	double t_z_min = (bb.z_min - e.z()) / d.z();
+	double t_z_max = (bb.z_max - e.z()) / d.z();
+
+	if (t_z_min > t_z_max) {
+		double tmp = t_z_max;
+		t_z_max = t_z_min;
+		t_z_min = tmp;
+	}
+
+	if ((t_min > t_z_max) || (t_z_min > t_max))
+		return IntersectionResult();
+
+	if (t_z_min > t_min)
+		t_min = t_z_min;
+
+	if (t_z_max < t_max)
+		t_max = t_z_max;
+
+	return IntersectionResult(t_min);
 }
 
 IntersectionResult Cluster::intersects(const Ray &ray) {
