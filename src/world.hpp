@@ -13,6 +13,7 @@
 #include "colour.hpp"
 #include "light.hpp"
 #include "geometry.hpp"
+#include "debug.h"
 
 enum SuperSamplingMode { ss_off, ss_on, ss_adaptive }; // TODO: add ss_adaptive
 
@@ -23,6 +24,9 @@ public:
 	bool shadows_enabled;
 	bool reflections_enabled;
 	int ss_level;
+
+	D( int sphere_rays_in_shade; )
+	D( int sphere_rays_in_light; )
 
 	~World();
 	World(Viewport, const vec3 &cameraPos, const RGBVec &bg_colour); 

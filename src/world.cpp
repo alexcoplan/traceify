@@ -13,7 +13,10 @@ World::World(Viewport vp, const vec3 &camPos, const RGBVec &bg) :
 	uAxis(1.0,0.0,0.0), // set up camera basis
 	vAxis(0.0,1.0,0.0),
 	wAxis(0.0,0.0,-1.0),
-	cameraPosition(camPos) {}
+	cameraPosition(camPos) {
+		D( sphere_rays_in_light = 0; )
+		D( sphere_rays_in_shade = 0; )
+	}
 
 
 World::~World() {
@@ -58,9 +61,11 @@ bool World::traceShadowRay(const Ray &ray, std::vector<SceneObject*> &objSpace) 
 	for (std::vector<SceneObject*>::iterator it = objSpace.begin(); it != objSpace.end(); it++) {
 		SceneObject *obj = *it;
 		IntersectionResult iResult = obj->intersects(ray);
-		if (iResult.intersected && iResult.coefficient > shadow_eps) {
-			if (!obj->isCluster())
-				return true;
+		if (iResult.intersected) {
+			if (!obj->isCluster()) {
+				if (iResult.coefficient > shadow_eps)
+					return true;
+			}
 			else {
 				Cluster *cluster = static_cast<Cluster*>(obj);
 				if (traceShadowRay(ray, cluster->boundedObjects))
@@ -125,8 +130,11 @@ RGBVec World::traceRay(const Ray &ray, double t_min, int depth) {
 		Ray shadowRay(p,l);
 	
 		// if we're not in shadow w.r.t this light
-		if (!shadows_enabled || !traceShadowRay(shadowRay, scenery))
+		if (!shadows_enabled || !traceShadowRay(shadowRay, scenery)) {
 			result_vec += obj->material.shade(*lptr, n, v, l); 
+			D( if (obj->tag() == "Sphere") sphere_rays_in_light++; )
+		}
+		D( else if (obj->tag() == "Sphere") sphere_rays_in_shade++; )
 
 
 		if (reflections_enabled && obj->material.reflective && depth < MAX_TRACE_DEPTH) {

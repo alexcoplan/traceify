@@ -36,16 +36,18 @@ void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflect
 
 	// Lighting Setup
 	Light l1(vec3(3.0,5.0,sphere_distance-10.0), RGBVec(0.4,0.4,0.4));
-	Light l2(vec3(1.0,5.0,5.0), RGBVec(0.5,0.5,0.5));
-	Light top1(vec3(0.0,5.0,sphere_distance), RGBVec(0.2,0.2,0.2));
-	Light top2(vec3(0.0,5.0,sphere_distance - 2.0), RGBVec(0.4,0.4,0.4));
-	Light back(vec3(0.0,3.0,sphere_distance+20.0), RGBVec(0.4,0.4,0.4));
+	Light l2(vec3(1.0,5.0,5.0), RGBVec(0.8,0.8,0.8));
+	Light top1(vec3(0.0,5.0,sphere_distance), RGBVec(0.5,0.5,0.5));
+	Light top2(vec3(-6.0,5.0,sphere_distance - 2.0), RGBVec(0.5,0.5,0.5));
+	Light back(vec3(-3.0,6.0,sphere_distance+10.0), RGBVec(0.6,0.6,0.6));
+	Light left(vec3(-6.0,5.0,sphere_distance), RGBVec(0.5,0.5,0.5));
 	
-	world.addLight(l1);
+//	world.addLight(l1);
 	world.addLight(l2);
 	world.addLight(top1);
 	world.addLight(top2);
 	world.addLight(back);
+	world.addLight(left);
 	
 	Image img(world.viewport.pixelsWide(), world.viewport.pixelsTall());
 
@@ -97,7 +99,12 @@ void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflect
 	std::string ss_str = "ss:" + std::to_string(ss_level);
 	std::string s_str = do_shadows ? "s+" : "s-";
 	std::string r_str = do_reflections ? "r+" : "r-";
-	img.writeToFile("demo_n" + n_str + "_" + ss_str + "_" + s_str + "_" + r_str  + ".ppm");
+	//img.writeToFile("demo_n" + n_str + "_" + ss_str + "_" + s_str + "_" + r_str  + ".ppm");
+	
+	D( std::cerr << "Debug stats: " << std::endl; )
+	D( std::cerr << "sphere_rays_in_light = " << world.sphere_rays_in_light << std::endl; )
+	D( std::cerr << "sphere_rays_in_shade = " << world.sphere_rays_in_shade << std::endl; )
+	img.writeToFile("render.ppm");
 }
 
 void draw_test_image()
@@ -121,6 +128,11 @@ void profile_with_params(int ss, bool shadows, bool reflections)
 		std::cout << float( clock() - begin_t )/CLOCKS_PER_SEC << std::endl;
 	}	
 
+}
+
+void sphere_bug_test()
+{
+	render_demo(27, 1, true, false);
 }
 
 void rt_profiler() 
@@ -150,7 +162,7 @@ void rt_profiler()
 
 int main()
 {
-	rt_profiler();
+	sphere_bug_test();
 
 	return 0;
 }
