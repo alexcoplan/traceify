@@ -7,10 +7,14 @@
 // World
 World::World(Viewport vp, const vec3 &camPos, const RGBVec &bg) :
        	viewport(vp), bg_colour(bg),
+	shadows_enabled(true),
+	reflections_enabled(true), 
+	ss_level(2),
 	uAxis(1.0,0.0,0.0), // set up camera basis
 	vAxis(0.0,1.0,0.0),
 	wAxis(0.0,0.0,-1.0),
 	cameraPosition(camPos) {}
+
 
 World::~World() {
 	for (size_t i = 0; i < scenery.size(); i++) {
@@ -121,11 +125,11 @@ RGBVec World::traceRay(const Ray &ray, double t_min, int depth) {
 		Ray shadowRay(p,l);
 	
 		// if we're not in shadow w.r.t this light
-		if (!traceShadowRay(shadowRay, scenery))
+		if (!shadows_enabled || !traceShadowRay(shadowRay, scenery))
 			result_vec += obj->material.shade(*lptr, n, v, l); 
 
 
-		if (obj->material.reflective && depth < MAX_TRACE_DEPTH) {
+		if (reflections_enabled && obj->material.reflective && depth < MAX_TRACE_DEPTH) {
 			// recursively trace reflection rays:
 			
 			vec3 d = ray.direction;
@@ -140,8 +144,8 @@ RGBVec World::traceRay(const Ray &ray, double t_min, int depth) {
 	return result_vec; 
 }	
 
-RGBColour World::colourForPixelAt(int i, int j, SuperSamplingMode ss_mode) {
-	const int ss_level = (ss_mode == ss_on) ? 4 : 1;
+// TODO: implement adaptive supersampling
+RGBColour World::colourForPixelAt(int i, int j) {
 	const double scale_factor = 1.0 / static_cast<double>(ss_level*ss_level);
 
 	double d = viewport.getViewingDistance();

@@ -20,6 +20,9 @@ class World {
 public:
 	Viewport viewport;
 	RGBVec bg_colour;
+	bool shadows_enabled;
+	bool reflections_enabled;
+	int ss_level;
 
 	~World();
 	World(Viewport, const vec3 &cameraPos, const RGBVec &bg_colour); 
@@ -28,7 +31,7 @@ public:
 	IntersectionDatum testIntersection(const Ray &r, double t_min, std::vector<SceneObject*> &objSpace);
 	RGBVec traceRay(const Ray &r, double t_min, int depth);
 	bool traceShadowRay(const Ray &r, std::vector<SceneObject*> &objspace);
-	RGBColour colourForPixelAt(int i, int j, SuperSamplingMode ss_mode);
+	RGBColour colourForPixelAt(int i, int j);
 
 	void cameraRotateY(double theta);
 	void cameraRotateX(double theta);
