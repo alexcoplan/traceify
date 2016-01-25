@@ -140,14 +140,23 @@ RGBVec World::traceRay(const Ray &ray, double t_min, int depth) {
 	return result_vec; 
 }	
 
-RGBColour World::colourForPixelAt(int i, int j) {
-	double uValue = viewport.uAmount(i);
-	double vValue = viewport.vAmount(j);
-	double d = viewport.getViewingDistance();
-	vec3 direction = wAxis.scaled(-d) + uAxis.scaled(uValue) + vAxis.scaled(vValue);	
+RGBColour World::colourForPixelAt(int i, int j, SuperSamplingMode ss_mode) {
+	const int ss_level = (ss_mode == ss_on) ? 4 : 1;
+	const double scale_factor = 1.0 / static_cast<double>(ss_level*ss_level);
 
-	Ray theRay(cameraPosition, direction);
-	
-	// begin tracing with t_min = 0, depth = 0
-	return  RGBColour(traceRay(theRay, 0.0, 0));
+	double d = viewport.getViewingDistance();
+
+	RGBVec pixelColour;
+
+	for (int a = 0; a < ss_level; a++) {
+		for (int b = 0; b < ss_level; b++) {
+			double uValue = viewport.uAmount(i, ss_level, a);
+			double vValue = viewport.vAmount(j, ss_level, b);
+			vec3 direction = wAxis.scaled(-d) + uAxis.scaled(uValue) + vAxis.scaled(vValue);	
+			Ray theRay(cameraPosition, direction);
+			pixelColour += traceRay(theRay, 0.0, 0).scaled(scale_factor);
+		}
+	}
+
+	return RGBColour(pixelColour);
 }	

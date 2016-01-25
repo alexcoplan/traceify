@@ -24,12 +24,12 @@ Viewport::Viewport(int pixWidth, int pixHeight, double camera_across, double vie
 	vSpread = (t-b)/static_cast<double>(n_y);
 }
 
-double Viewport::uAmount(int i) {
-	return l + uSpread * (static_cast<double>(i) + 0.5);	
+double Viewport::uAmount(int i, int ss_level, int ss_iter) {
+	return l + uSpread * (static_cast<double>(i) + (static_cast<double>(ss_iter) + 0.5)/static_cast<double>(ss_level));	
 }
 
-double Viewport::vAmount(int j) {
-	return b + vSpread * (static_cast<double>(j) + 0.5);
+double Viewport::vAmount(int j, int ss_level, int ss_iter) {
+	return b + vSpread * (static_cast<double>(j) + (static_cast<double>(ss_iter) + 0.5)/static_cast<double>(ss_level));
 }
 
 double Viewport::getViewingDistance() { return d; }

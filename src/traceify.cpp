@@ -79,7 +79,7 @@ void trace_dem_rays()
 
 	for (int i = 0; i < world.viewport.pixelsWide(); i++) {
 		for (int j = 0; j < world.viewport.pixelsTall(); j++) {
-			img[i][j] = world.colourForPixelAt(i,j);
+			img[i][j] = world.colourForPixelAt(i,j, ss_on);
 		}
 	}
 

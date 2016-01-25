@@ -14,7 +14,7 @@
 #include "light.hpp"
 #include "geometry.hpp"
 
-enum SuperSamplingMode { ss_off, ss_on }; // TODO: add ss_adaptive
+enum SuperSamplingMode { ss_off, ss_on, ss_adaptive }; // TODO: add ss_adaptive
 
 class World {
 public:
@@ -28,7 +28,7 @@ public:
 	IntersectionDatum testIntersection(const Ray &r, double t_min, std::vector<SceneObject*> &objSpace);
 	RGBVec traceRay(const Ray &r, double t_min, int depth);
 	bool traceShadowRay(const Ray &r, std::vector<SceneObject*> &objspace);
-	RGBColour colourForPixelAt(int i, int j);
+	RGBColour colourForPixelAt(int i, int j, SuperSamplingMode ss_mode);
 
 	void cameraRotateY(double theta);
 	void cameraRotateX(double theta);
