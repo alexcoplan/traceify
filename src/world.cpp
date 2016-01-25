@@ -1,7 +1,8 @@
 #include "world.hpp"
 #include "debug.h"
 
-#define REFLECTION_EPS 0.00001
+#define REFLECTION_EPS 	0.00001
+#define SHADOW_EPS 	0.00001
 #define MAX_TRACE_DEPTH 3
 
 RenderStats::RenderStats() :
@@ -68,14 +69,12 @@ void World::cameraRotateX(double theta) {
 
 // returns true if under shadow
 bool World::traceShadowRay(const Ray &ray, std::vector<SceneObject*> &objSpace) {
-	const double shadow_eps = 0.00001;
-
 	for (std::vector<SceneObject*>::iterator it = objSpace.begin(); it != objSpace.end(); it++) {
 		SceneObject *obj = *it;
 		IntersectionResult iResult = obj->intersects(ray);
 		if (iResult.intersected) {
 			if (!obj->isCluster()) {
-				if (iResult.coefficient > shadow_eps)
+				if (iResult.coefficient > SHADOW_EPS)
 					return true;
 			}
 			else {
@@ -101,13 +100,13 @@ IntersectionDatum World::testIntersection(const Ray &ray, double t_min, std::vec
 				Cluster *cluster = static_cast<Cluster*>(scene_obj);
 				IntersectionDatum ir = testIntersection(ray, t_min, cluster->boundedObjects);
 				if (ir.intersected) {
-					if (closestObject == NULL || ir.coefficient < t) {
+					if (ir.coefficient > t_min && (closestObject == NULL || ir.coefficient < t)) {
 						closestObject = ir.intersectedObj;
 						t = ir.coefficient;
 					}
 				}
 			}	
-			else if (closestObject == NULL || iResult.coefficient < t) {
+			else if (iResult.coefficient > t_min && (closestObject == NULL || iResult.coefficient < t)) {
 				closestObject = scene_obj;
 				t = iResult.coefficient;
 			}
@@ -126,7 +125,7 @@ RGBVec World::traceRay(const Ray &ray, double t_min, int depth) {
 	
 	if (!idat.intersected)
 		return bg_colour; 
-	
+
 	RGBVec result_vec;
 
 	ShadableObject *obj = static_cast<ShadableObject *>(idat.intersectedObj);
@@ -155,6 +154,7 @@ RGBVec World::traceRay(const Ray &ray, double t_min, int depth) {
 			vec3 d = ray.direction;
 			Ray reflected(p, d - n.scaled(2 * d.dot(n)));
 			RGBVec reflectedColour = traceRay(reflected, REFLECTION_EPS, depth + 1);
+			if (reflectedColour.r() == 0.0 && reflectedColour.g() == 0.0 && reflectedColour.b() == 0.0) continue;
 			RGBVec k_m = obj->material.specular_colour;
 			result_vec += reflectedColour.multiplyColour(k_m);
 		}
@@ -173,17 +173,28 @@ int int_pow(int x, int n) {
 
 // TODO: implement adaptive supersampling
 RGBColour World::colourForPixelAt(int i, int j) {
-	// 0.1 => x16, 1.0 => x64
+	double d = viewport.getViewingDistance();
+
+	if (ss_level == 1) {
+		// no super-sampling
+		double uValue = viewport.uAmount(i, 1, 0, false);
+		double vValue = viewport.vAmount(j, 1, 0, false);
+		vec3 direction = wAxis.scaled(-d) + uAxis.scaled(uValue) + vAxis.scaled(vValue);
+		Ray theRay(cameraPosition, direction);
+
+		return RGBColour(traceRay(theRay, 0.0, 0));
+	}
+
+	// 0.01 => x16, 1.2 => x64
 	double thresholds[2] = {0.01, 1.2}; 
 
-	double d = viewport.getViewingDistance();
 
 	double var = 0.0;
 	int lvl_log = 2;
 
 	RGBVec pixelColour;
 
-	while (lvl_log < ss_level) {
+	while (lvl_log <= ss_level) {
 		pixelColour = RGBVec(0.0,0.0,0.0);
 
 		int lvl = int_pow(2, lvl_log - 1); 
@@ -200,18 +211,17 @@ RGBColour World::colourForPixelAt(int i, int j) {
 				Ray theRay(cameraPosition, direction);
 				RGBVec sample = traceRay(theRay, 0.0, 0).scaled(scale_factor);
 				pixelColour += sample;
-				sum_x_sq += sample.getVector().pointwise(sample.getVector());
+				if (ss_level > 2) sum_x_sq += sample.getVector().pointwise(sample.getVector());
 			}
 		}		
 
-		if (lvl_log == 2) {
+		if (lvl_log == 2 && ss_level > 2) {
 			vec3 varvec = sum_x_sq.scaled(scale_factor) - pixelColour.getVector().pointwise(pixelColour.getVector());
 			var = varvec.magnitude();
 			if (i % 100 == 0 && j % 100 == 0) std::cout << "var: " << var << std::endl;
 		}
 
-		if (var < thresholds[lvl_log - 2]) break;
-
+		if (var < thresholds[lvl_log - 2] || lvl_log == ss_level) break;
 		lvl_log++;
 	}
 

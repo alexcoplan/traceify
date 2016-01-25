@@ -55,10 +55,11 @@ void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflect
 	Plane floor_plane(floor_normal, plane_const, planeMat);
 	world.addObject(floor_plane);
 
-	Cluster sphereGroup;
+//	Cluster sphereGroup;
 
 	int spheres_added = 0;
 
+	
 	for (int i = 0; i < 3 && spheres_added < num_spheres; i++) {
 		for (int j = 0; j < 3 && spheres_added < num_spheres; j++) {
 			for (int k = 0; k < 3 && spheres_added < num_spheres; k++) {
@@ -76,13 +77,14 @@ void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflect
 				RGBVec spec(0.2, 0.2, 0.2);
 				Material mat(col,spec,0.0,0.0,true); // relections disabled for now 
 				Sphere s(pos, 0.8, mat);
-				sphereGroup.addObject(s);
+				//sphereGroup.addObject(s);
+				world.addObject(s);
 				spheres_added++;
 			}
 		}
 	}
 
-	world.addObject(sphereGroup);
+//	world.addObject(sphereGroup);
 
 	for (int i = 0; i < world.viewport.pixelsWide(); i++) {
 		for (int j = 0; j < world.viewport.pixelsTall(); j++) {
@@ -154,7 +156,17 @@ void rt_profiler()
 
 int main()
 {
-	render_demo(27, 4, true, true, false);
+	// render demo scene with
+	//  - 27 spheres
+	//  - x4 supersampling (non-adaptive)
+	//  - shadows enabled
+	//  - refelction enabled
+	//  - not in profiling mode
+	//
+	//  change the second parameter to
+	//   - 3 for x16 jittered adaptive super-sampling
+	//   - 4 for x64 jittered adaptive super-sampling
+	render_demo(27, 2, true, true, false);
 
 	return 0;
 }
