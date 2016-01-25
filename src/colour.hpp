@@ -40,6 +40,8 @@ public:
 	double g() const;
 	double b() const;
 
+	vec3 getVector();
+
 	// setters
 	void setR(double);
 	void setG(double);

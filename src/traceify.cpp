@@ -8,20 +8,19 @@
 #include "world.hpp"
 #include "image.hpp"
 
-#define IMG_WIDTH 500
-#define IMG_HEIGHT 500
+#define IMG_WIDTH 1000
+#define IMG_HEIGHT 800
 #define CAMERA_WIDTH 0.1
 #define VIEWING_DISTANCE 0.25
 #define SPHERE_RADIUS 0.4
 
 
-
-void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflections)
+void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflections, bool profiling)
 {
 	const double sphere_distance = 30.0;
 
 	World world(
-			Viewport(IMG_WIDTH, IMG_HEIGHT, CAMERA_WIDTH, VIEWING_DISTANCE), 
+			Viewport(profiling ? 500 : IMG_WIDTH, profiling ? 500 : IMG_HEIGHT, CAMERA_WIDTH, VIEWING_DISTANCE), 
 			vec3(-8.8, 4.5, -0.1), // camera position
 			RGBVec()					    
 	);
@@ -35,19 +34,15 @@ void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflect
 	world.cameraRotateX(-0.08);
 
 	// Lighting Setup
-	Light l1(vec3(3.0,5.0,sphere_distance-10.0), RGBVec(0.4,0.4,0.4));
-	Light l2(vec3(1.0,5.0,5.0), RGBVec(0.8,0.8,0.8));
+	Light l2(vec3(1.0,5.0,5.0), RGBVec(0.9,0.9,0.9));
 	Light top1(vec3(0.0,5.0,sphere_distance), RGBVec(0.5,0.5,0.5));
-	Light top2(vec3(-6.0,5.0,sphere_distance - 2.0), RGBVec(0.5,0.5,0.5));
+	Light top2(vec3(-6.0,5.0,sphere_distance - 2.0), RGBVec(0.8,0.8,0.8));
 	Light back(vec3(-3.0,6.0,sphere_distance+10.0), RGBVec(0.6,0.6,0.6));
-	Light left(vec3(-6.0,5.0,sphere_distance), RGBVec(0.5,0.5,0.5));
 	
-//	world.addLight(l1);
 	world.addLight(l2);
 	world.addLight(top1);
 	world.addLight(top2);
 	world.addLight(back);
-	world.addLight(left);
 	
 	Image img(world.viewport.pixelsWide(), world.viewport.pixelsTall());
 
@@ -95,16 +90,18 @@ void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflect
 		}
 	}
 
-	std::string n_str = std::to_string(num_spheres); 
-	std::string ss_str = "ss:" + std::to_string(ss_level);
-	std::string s_str = do_shadows ? "s+" : "s-";
-	std::string r_str = do_reflections ? "r+" : "r-";
-	//img.writeToFile("demo_n" + n_str + "_" + ss_str + "_" + s_str + "_" + r_str  + ".ppm");
-	
-	D( std::cerr << "Debug stats: " << std::endl; )
-	D( std::cerr << "sphere_rays_in_light = " << world.sphere_rays_in_light << std::endl; )
-	D( std::cerr << "sphere_rays_in_shade = " << world.sphere_rays_in_shade << std::endl; )
-	img.writeToFile("render.ppm");
+
+	if (profiling) {
+		std::string n_str = std::to_string(num_spheres); 
+		std::string ss_str = "ss:" + std::to_string(ss_level);
+		std::string s_str = do_shadows ? "s+" : "s-";
+		std::string r_str = do_reflections ? "r+" : "r-";
+		img.writeToFile("demo_n" + n_str + "_" + ss_str + "_" + s_str + "_" + r_str  + ".ppm");	
+	}
+	else {
+		world.renderStats.summarise();
+		img.writeToFile("render.ppm");
+	}
 }
 
 void draw_test_image()
@@ -124,15 +121,10 @@ void profile_with_params(int ss, bool shadows, bool reflections)
 		std::cout << i << "\t";
 
 		const clock_t begin_t = clock();
-		render_demo(i, ss, shadows, reflections);
+		render_demo(i, ss, shadows, reflections, true);
 		std::cout << float( clock() - begin_t )/CLOCKS_PER_SEC << std::endl;
 	}	
 
-}
-
-void sphere_bug_test()
-{
-	render_demo(27, 1, true, false);
 }
 
 void rt_profiler() 
@@ -162,7 +154,7 @@ void rt_profiler()
 
 int main()
 {
-	sphere_bug_test();
+	render_demo(27, 4, true, true, false);
 
 	return 0;
 }

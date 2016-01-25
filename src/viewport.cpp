@@ -1,4 +1,6 @@
 #include "viewport.hpp"
+#include <random>
+#include "debug.h"
 
 // this constructor is a shorthand to create a square viewport
 Viewport::Viewport(int sq_pixels, double sq_across, double viewing_distance) : 
@@ -24,12 +26,23 @@ Viewport::Viewport(int pixWidth, int pixHeight, double camera_across, double vie
 	vSpread = (t-b)/static_cast<double>(n_y);
 }
 
-double Viewport::uAmount(int i, int ss_level, int ss_iter) {
-	return l + uSpread * (static_cast<double>(i) + (static_cast<double>(ss_iter) + 0.5)/static_cast<double>(ss_level));	
+double Viewport::uAmount(int i, int ss_level, int ss_iter, bool introduceJitter) {
+	
+	double across_pixel = (double)i + ((double)ss_iter + 0.5)/(double)ss_level;	
+	if (introduceJitter) {
+		double jitter = ((((double)rand() / (double)RAND_MAX) - 0.5)) / (2*(double)ss_level);
+		across_pixel += jitter;
+	}
+	return l + uSpread * across_pixel; 
 }
 
-double Viewport::vAmount(int j, int ss_level, int ss_iter) {
-	return b + vSpread * (static_cast<double>(j) + (static_cast<double>(ss_iter) + 0.5)/static_cast<double>(ss_level));
+double Viewport::vAmount(int j, int ss_level, int ss_iter, bool introduceJitter) {
+	double up_pixel = (double)j + ((double)ss_iter + 0.5)/(double)ss_level;	
+	if (introduceJitter) {
+		double jitter = ((((double)rand() / (double)RAND_MAX) - 0.5)) / (2*(double)ss_level);
+		up_pixel += jitter;
+	}
+	return b + vSpread * up_pixel; 
 }
 
 double Viewport::getViewingDistance() { return d; }

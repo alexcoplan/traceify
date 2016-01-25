@@ -4,12 +4,24 @@
 #define REFLECTION_EPS 0.00001
 #define MAX_TRACE_DEPTH 3
 
+RenderStats::RenderStats() :
+	ss_x4(0), ss_x16(0), ss_x64(0) {}
+
+void RenderStats::summarise() {
+	std::cout << "--- traceify rendering statistics ---" << std::endl << std::endl;
+	std::cout << "--> super-sampling:" << std::endl;
+	std::cout << "\tpixels rendered @ x4  : " << ss_x4 << std::endl;
+	std::cout << "\tpixels rendered @ x16 : " << ss_x16 << std::endl;
+	std::cout << "\tpixels rendered @ x64 : " << ss_x64 << std::endl;	
+}
+
 // World
 World::World(Viewport vp, const vec3 &camPos, const RGBVec &bg) :
        	viewport(vp), bg_colour(bg),
 	shadows_enabled(true),
 	reflections_enabled(true), 
 	ss_level(2),
+	ss_mode(ss_adaptive),
 	uAxis(1.0,0.0,0.0), // set up camera basis
 	vAxis(0.0,1.0,0.0),
 	wAxis(0.0,0.0,-1.0),
@@ -152,23 +164,60 @@ RGBVec World::traceRay(const Ray &ray, double t_min, int depth) {
 	return result_vec; 
 }	
 
+// this is not optimal but we don't care
+// for tiny n
+int int_pow(int x, int n) {
+	if (n == 0) return 1;
+	return x * int_pow(x, n-1);
+}
+
 // TODO: implement adaptive supersampling
 RGBColour World::colourForPixelAt(int i, int j) {
-	const double scale_factor = 1.0 / static_cast<double>(ss_level*ss_level);
+	// 0.1 => x16, 1.0 => x64
+	double thresholds[2] = {0.01, 1.2}; 
 
 	double d = viewport.getViewingDistance();
 
+	double var = 0.0;
+	int lvl_log = 2;
+
 	RGBVec pixelColour;
 
-	for (int a = 0; a < ss_level; a++) {
-		for (int b = 0; b < ss_level; b++) {
-			double uValue = viewport.uAmount(i, ss_level, a);
-			double vValue = viewport.vAmount(j, ss_level, b);
-			vec3 direction = wAxis.scaled(-d) + uAxis.scaled(uValue) + vAxis.scaled(vValue);	
-			Ray theRay(cameraPosition, direction);
-			pixelColour += traceRay(theRay, 0.0, 0).scaled(scale_factor);
+	while (lvl_log < ss_level) {
+		pixelColour = RGBVec(0.0,0.0,0.0);
+
+		int lvl = int_pow(2, lvl_log - 1); 
+
+		double scale_factor = 1.0 / static_cast<double>(lvl*lvl);
+
+		vec3 sum_x_sq(0.0,0.0,0.0);
+
+		for (int a = 0; a < lvl; a++) {
+			for (int b = 0; b < lvl; b++) {
+				double uValue = viewport.uAmount(i, ss_level, a, lvl_log > 2);
+				double vValue = viewport.vAmount(j, ss_level, b, lvl_log > 2);
+				vec3 direction = wAxis.scaled(-d) + uAxis.scaled(uValue) + vAxis.scaled(vValue);	
+				Ray theRay(cameraPosition, direction);
+				RGBVec sample = traceRay(theRay, 0.0, 0).scaled(scale_factor);
+				pixelColour += sample;
+				sum_x_sq += sample.getVector().pointwise(sample.getVector());
+			}
+		}		
+
+		if (lvl_log == 2) {
+			vec3 varvec = sum_x_sq.scaled(scale_factor) - pixelColour.getVector().pointwise(pixelColour.getVector());
+			var = varvec.magnitude();
+			if (i % 100 == 0 && j % 100 == 0) std::cout << "var: " << var << std::endl;
 		}
+
+		if (var < thresholds[lvl_log - 2]) break;
+
+		lvl_log++;
 	}
+
+	if (lvl_log == 2) renderStats.ss_x4++;
+       	else if (lvl_log == 3) renderStats.ss_x16++;
+	else if (lvl_log == 4) renderStats.ss_x64++;
 
 	return RGBColour(pixelColour);
 }	

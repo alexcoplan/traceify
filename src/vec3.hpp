@@ -24,6 +24,9 @@ public:
 	vec3 scaled(double factor);	// preserves state
 	vec3 scaled(double factor) const;
 
+	vec3 pointwise(const vec3&);
+	vec3 pointwise(const vec3&) const;
+
 	// TODO: add normalised stuff
 	vec3 normalised();
 	vec3 normalised() const;
@@ -53,6 +56,8 @@ public:
 
 	vec3 operator+(const vec3&) const;
 	vec3 operator-(const vec3&) const;
+
+	vec3 operator+=(const vec3&);
 };
 
 

@@ -15,6 +15,8 @@ double RGBVec::r() const { return cvec.x(); }
 double RGBVec::g() const { return cvec.y(); }
 double RGBVec::b() const { return cvec.z(); }
 
+vec3 RGBVec::getVector() { return cvec; }
+
 void RGBVec::setR(double r) { cvec.setX(r); }
 void RGBVec::setG(double g) { cvec.setY(g); }
 void RGBVec::setB(double b) { cvec.setZ(b); }

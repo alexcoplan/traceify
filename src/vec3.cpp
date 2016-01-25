@@ -34,6 +34,14 @@ vec3 vec3::scaled(double factor) const {
 	return vec3(vx*factor, vy*factor, vz*factor);
 }
 
+vec3 vec3::pointwise(const vec3 &v) {
+	return vec3(vx*v.vx, vy*v.vy, vz*v.vz);
+}
+
+vec3 vec3::pointwise(const vec3 &v) const {
+	return vec3(vx*v.vx, vy*v.vy, vz*v.vz);
+}
+
 vec3 vec3::normalised() {
 	return scaled(1.0/magnitude());
 }
@@ -74,6 +82,13 @@ vec3 vec3::operator-(const vec3& v) {
 
 vec3 vec3::operator-(const vec3& v) const {
 	return vec3(vx - v.vx, vy - v.vy, vz - v.vz);
+}
+
+vec3 vec3::operator+=(const vec3& v) {
+	vx += v.vx;
+	vy += v.vy;
+	vz += v.vz;
+	return (*this);
 }
 
 double vec3::x() { return vx; }

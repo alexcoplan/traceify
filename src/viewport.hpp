@@ -23,8 +23,8 @@ public:
 	 * these functions calculate the amount we should move
 	 * in the u and v directions to shoot a ray through a
 	 * given pixel */
-	double uAmount(int i, int ss_level, int ss_iter);
-	double vAmount(int j, int ss_level, int ss_iter);
+	double uAmount(int i, int ss_level, int ss_iter, bool jitter);
+	double vAmount(int j, int ss_level, int ss_iter, bool jitter);
 
 	double getViewingDistance();
 	double getViewingDistance() const; 
