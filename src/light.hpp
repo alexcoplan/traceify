@@ -3,6 +3,9 @@
 #ifndef LIGHT_HEADER_WARRIOR
 #define LIGHT_HEADER_WARRIOR
 
+// Light
+//
+// Point light representation
 class Light {
 public:
 	vec3 pos;

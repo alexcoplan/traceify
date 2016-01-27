@@ -72,7 +72,6 @@ struct RGBColour {
 public:	
 	RGBColour();
 	RGBColour(char, char, char);
-	std::string getColour();
 	RGBColour(const RGBVec &v); 
 
 	D(void debug_print();)

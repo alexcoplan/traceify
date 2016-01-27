@@ -17,6 +17,9 @@
 
 void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflections, bool profiling)
 {
+	if (!profiling)
+		std::cout << "Rendering demo scene: " << num_spheres << " spheres, shadows: " << (do_shadows ? "on" : "off") << ", reflections: " << (do_reflections ? "on" : "off") << std::endl; 
+
 	const double sphere_distance = 30.0;
 
 	World world(
@@ -55,7 +58,7 @@ void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflect
 	Plane floor_plane(floor_normal, plane_const, planeMat);
 	world.addObject(floor_plane);
 
-//	Cluster sphereGroup;
+	Cluster sphereGroup;
 
 	int spheres_added = 0;
 
@@ -77,14 +80,13 @@ void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflect
 				RGBVec spec(0.2, 0.2, 0.2);
 				Material mat(col,spec,0.0,0.0,true); // relections disabled for now 
 				Sphere s(pos, 0.8, mat);
-				//sphereGroup.addObject(s);
-				world.addObject(s);
+				sphereGroup.addObject(s);
 				spheres_added++;
 			}
 		}
 	}
 
-//	world.addObject(sphereGroup);
+	world.addObject(sphereGroup);
 
 	for (int i = 0; i < world.viewport.pixelsWide(); i++) {
 		for (int j = 0; j < world.viewport.pixelsTall(); j++) {
@@ -106,17 +108,6 @@ void render_demo(int num_spheres, int ss_level, bool do_shadows, bool do_reflect
 	}
 }
 
-void draw_test_image()
-{
-	Image img(20,20);
-	for (int i = 0; i < 20; i++) {
-		for (int j = 0; j < 20; j++) {
-			img[i][j] = RGBColour(255,0,0);
-		}
-	}
-	img.writeToFile("test_file.pmm");
-}
-
 void profile_with_params(int ss, bool shadows, bool reflections)
 {
 	for (int i = 1; i <= 27; i++) {
@@ -126,7 +117,6 @@ void profile_with_params(int ss, bool shadows, bool reflections)
 		render_demo(i, ss, shadows, reflections, true);
 		std::cout << float( clock() - begin_t )/CLOCKS_PER_SEC << std::endl;
 	}	
-
 }
 
 void rt_profiler() 

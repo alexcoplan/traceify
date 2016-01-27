@@ -26,10 +26,7 @@ World::World(Viewport vp, const vec3 &camPos, const RGBVec &bg) :
 	uAxis(1.0,0.0,0.0), // set up camera basis
 	vAxis(0.0,1.0,0.0),
 	wAxis(0.0,0.0,-1.0),
-	cameraPosition(camPos) {
-		D( sphere_rays_in_light = 0; )
-		D( sphere_rays_in_shade = 0; )
-	}
+	cameraPosition(camPos) {}
 
 
 World::~World() {
@@ -143,10 +140,7 @@ RGBVec World::traceRay(const Ray &ray, double t_min, int depth) {
 		// if we're not in shadow w.r.t this light
 		if (!shadows_enabled || !traceShadowRay(shadowRay, scenery)) {
 			result_vec += obj->material.shade(*lptr, n, v, l); 
-			D( if (obj->tag() == "Sphere") sphere_rays_in_light++; )
 		}
-		D( else if (obj->tag() == "Sphere") sphere_rays_in_shade++; )
-
 
 		if (reflections_enabled && obj->material.reflective && depth < MAX_TRACE_DEPTH) {
 			// recursively trace reflection rays:

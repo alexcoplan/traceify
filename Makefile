@@ -19,13 +19,13 @@ debug: $(SOURCES) $(EXEC)
 # OS X build environment
 render: all
 	./$(EXEC)
-	killall ToyViewer
+	@killall ToyViewer || true
 	open render.ppm
 
 rerender: all
 	mv render.ppm old_render.ppm
 	./$(EXEC)
-	killall ToyViewer
+	@killall ToyViewer || true
 	open render.ppm old_render.ppm
 
 
@@ -44,4 +44,5 @@ $(BIN)%.o : $(SOURCE)%.cpp
 
 clean :
 	rm -f $(BIN)*
+	rm -rf *.dSYM
 

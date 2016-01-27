@@ -25,15 +25,17 @@ void BoundingBox::swallow(const BoundingBox &b) {
 
 /* SceneObject implementation
  *
- * SceneObject is an abstract class which the actual geometric 
- * primitives (spheres, planes, etc.) implement.
+ * SceneObject is a high-level abstract class which all the 
+ * constructs in the scene (spheres, clusters, planes, etc.) implement.
  */
 
-// SceneObject virtual destructor definition
+// need this for the virtual destructor to compile
 SceneObject::~SceneObject() {}
 
 // Used to contruct the portion of the subclassed
 // objects which is a ShadableObject
+//
+// Note that ShadableObject is still abstract
 ShadableObject::ShadableObject(Material mat) : material(mat) {}
 
 bool ShadableObject::isCluster() 	{ return false; }
@@ -42,10 +44,14 @@ bool ShadableObject::isCluster() const 	{ return false; }
 // note that the `makeCopy` method is necessary to allow us
 // to make a heap-allocated copy of a SceneObject
 // without knowing its type at compile-time.
-// since this method is virtual, it achieves that for us:
+// since this method is virtual, it achieves that for us.
+//
+// the down-side is that it must be re-implemented for each subclass of SceneObject
+// here is the Sphere implementation:
 SceneObject *Sphere::makeCopy() 	{ return new Sphere(*this); }
 SceneObject *Sphere::makeCopy() const 	{ return new Sphere(*this); }
 
+// tag()s are useful for debugging (e.g. printing what kind of object we're intersecting with)
 std::string SceneObject::tag() 	{ return "SceneObject"; }
 std::string Sphere::tag() 	{ return "Sphere"; }
 std::string Plane::tag() 	{ return "Plane"; }
@@ -106,9 +112,7 @@ IntersectionResult Sphere::intersects(const Ray &ray) const {
 
 	// just take - of +/-, since we want closest point of intersection
 	double t = (-b - sqrt(discriminant))/(d.dot(d));
-	if (t > 0) return IntersectionResult(t);
-	
-	return IntersectionResult(); // do not count negative intersection
+	return IntersectionResult(t);
 }
 
 // use the const overloaded version for non-const objects
@@ -190,21 +194,16 @@ BoundingBox Cluster::getBoundBox() 	 { return bb; }
 BoundingBox Cluster::getBoundBox() const { return bb; }
 
 void Cluster::addObject(const SceneObject &obj) {
-	D( std::cerr << "adding sphere to cluster group... " );
 	SceneObject *obj_ptr = obj.makeCopy();
 	boundedObjects.push_back(obj_ptr);
 	bb.swallow(obj_ptr->getBoundBox());
-	D( std::cerr << "bounding box now given by: " << std::endl; )
-	D( std::cerr << "   x_min: " << bb.x_min << ", x_max: " << bb.x_max; )
-	D( std::cerr << ", y_min: " << bb.y_min << ", y_max: " << bb.y_max; )
-	D( std::cerr << ", z_min: " << bb.z_min << ", z_max: " << bb.z_max << std::endl; )
 }
 
 double max(double a, double b, double c) {
 	return a > b ? (c > a ? c : a) : (c > b ? c : b);
 }
 
-// TODO: optimise this
+// TODO: optimise this (it's not bad, but we could probably do better)
 IntersectionResult Cluster::intersects(const Ray &ray) const {
 	const vec3 e = ray.origin;
        	const vec3 d = ray.direction;

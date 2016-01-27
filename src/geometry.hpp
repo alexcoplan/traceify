@@ -2,6 +2,9 @@
  *
  * deals with the various kinds of primitive
  * we can intersect with
+ *
+ * TODO: add triangles, cylinders, etc.
+ *
  */
 
 #include <vector>
@@ -21,6 +24,9 @@ struct BoundingBox {
 	void swallow(const BoundingBox &b);
 };
 
+/* SceneObject
+ *
+ * Abstract class from which all objects in the scene inherit */
 class SceneObject {
 public:
 	virtual IntersectionResult intersects(const Ray &r) = 0;
@@ -46,12 +52,17 @@ struct GeometryException : public std::runtime_error {
 	GeometryException(std::string msg);
 };
 
-// if we have many objects that are close together
-// then we can group them to a cluster
-//
-// this can greatly improve efficiency by first checking if the ray
-// intersects this bounding box, and only then checking if it intersects
-// each of the individual objets in the cluster 
+/* Cluster
+ *
+ * if we have many objects that are close together
+ * then we can group them to a cluster
+ *
+ * this can improve efficiency by first checking if the ray
+ * intersects this bounding box, and only then checking if it intersects
+ * each of the individual objets in the cluster
+ *
+ * TODO: add hierarchical bounding boxes
+ */
 class Cluster : public SceneObject {
 private:
 	BoundingBox bb;
@@ -78,6 +89,10 @@ public:
 	~Cluster();
 };
 
+/* ShadableObject
+ *
+ * Anything that we want to actually render
+ * should inherit from this */
 class ShadableObject : public SceneObject {
 public:
 	Material material;

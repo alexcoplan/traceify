@@ -33,6 +33,7 @@ void RGBVec::normalise() {
 	if (b() < 0.0) setB(0.0);
 }
 
+// RGBVec: other methods
 void RGBVec::scale(double factor) {
 	cvec.scale(factor);
 	normalise();
@@ -105,8 +106,4 @@ RGBColour::RGBColour(const RGBVec &v) {
 	colour[0] = (char)(round(v.r() * 255.0));
 	colour[1] = (char)(round(v.g() * 255.0));
 	colour[2] = (char)(round(v.b() * 255.0));
-}
-
-std::string RGBColour::getColour() {
-	return "(" + std::to_string(colour[0]) + "," + std::to_string(colour[1]) + "," + std::to_string(colour[2]) + ")";
 }
