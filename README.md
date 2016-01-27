@@ -2,6 +2,8 @@
 
 traceify is a simple raytracer written in C++.
 
+![sample image](http://alexcoplan.github.io/traceify/traceify_demo.jpg)
+
 ## Features
 
  - Geometric Primitives: Spheres, infinite planes
