@@ -4,4 +4,5 @@ bin*
 *.DS_STORE
 *.ppm
 *.swp
+*.pyc
 profiling*
