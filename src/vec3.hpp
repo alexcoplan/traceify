@@ -16,6 +16,10 @@ private:
 	double vz;
 
 public:
+	const static vec3 iVec;
+	const static vec3 jVec;
+	const static vec3 kVec;
+
 	// constructors
 	vec3(double x, double y, double z);
 	void operator=(const vec3&);
@@ -27,7 +31,9 @@ public:
 	vec3 pointwise(const vec3&);
 	vec3 pointwise(const vec3&) const;
 
-	// TODO: add normalised stuff
+	vec3 pointwiseAbsolute();
+	vec3 pointwiseAbsolute() const;
+
 	vec3 normalised();
 	vec3 normalised() const;
 	
@@ -58,6 +64,10 @@ public:
 	vec3 operator-(const vec3&) const;
 
 	vec3 operator+=(const vec3&);
+
+	// comparison
+	bool operator==(const vec3&);
+	bool operator==(const vec3&) const;
 };
 
 

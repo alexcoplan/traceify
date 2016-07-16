@@ -11,6 +11,10 @@ void vec3::debug_print() {
 
 // END DEBUG
 
+// 3D Basis Vectors
+const vec3 vec3::iVec = vec3(1.0, 0.0, 0.0);
+const vec3 vec3::jVec = vec3(0.0, 1.0, 0.0);
+const vec3 vec3::kVec = vec3(0.0, 0.0, 1.0);
 	
 vec3::vec3(double x, double y, double z) : vx(x), vy(y), vz(z) {}
 
@@ -40,6 +44,14 @@ vec3 vec3::pointwise(const vec3 &v) {
 
 vec3 vec3::pointwise(const vec3 &v) const {
 	return vec3(vx*v.vx, vy*v.vy, vz*v.vz);
+}
+
+vec3 vec3::pointwiseAbsolute() {
+	return vec3(std::abs(vx), std::abs(vy), std::abs(vz));
+}
+
+vec3 vec3::pointwiseAbsolute() const {
+	return vec3(std::abs(vx), std::abs(vy), std::abs(vz));
 }
 
 vec3 vec3::normalised() {
@@ -89,6 +101,14 @@ vec3 vec3::operator+=(const vec3& v) {
 	vy += v.vy;
 	vz += v.vz;
 	return (*this);
+}
+
+bool vec3::operator==(const vec3 &v) {
+	return (v.vx == vx && v.vy == vy && v.vz == vz);
+}
+
+bool vec3::operator==(const vec3 &v) const {
+	return (v.vx == vx && v.vy == vy && v.vz == vz);
 }
 
 double vec3::x() { return vx; }

@@ -7,21 +7,30 @@
  *
  */
 
+#ifndef GEOM_HGUARD
+#define GEOM_HGUARD
+
+#define X_AXIS 	0
+#define Y_AXIS 	1
+#define Z_AXIS 	2
+#define BBOX_EPS 0.00001	
+
 #include <vector>
 
 #include "ray.hpp"
 #include "material.hpp"
 
-struct BoundingBox {
-	double x_min;
-	double x_max;
-	double y_min;
-	double y_max;
-	double z_min;
-	double z_max;
+struct BBox {
+	static const double inf; // set to IEEE FP infinity (for convenience)
+	double min[3];
+	double max[3];
 
-	BoundingBox();
-	void swallow(const BoundingBox &b);
+	BBox();
+	BBox(double initSize); // origin-centered cube with side length `initSize`
+	void swallow(const BBox &);
+	void operator=(const BBox &);
+	vec3 getMidpoint();
+	double midpointForAxis(int axis);
 };
 
 /* SceneObject
@@ -35,10 +44,8 @@ public:
 	virtual SceneObject *makeCopy() const = 0;
 	virtual std::string tag(); // for debugging
 	virtual std::string tag() const;
-	virtual bool isCluster() = 0;
-	virtual bool isCluster() const = 0;
-	virtual BoundingBox getBoundBox() = 0;
-	virtual BoundingBox getBoundBox() const = 0;
+	virtual BBox getBBox() = 0;
+	virtual BBox getBBox() const = 0;
 	virtual ~SceneObject();
 };
 
@@ -52,42 +59,6 @@ struct GeometryException : public std::runtime_error {
 	GeometryException(std::string msg);
 };
 
-/* Cluster
- *
- * if we have many objects that are close together
- * then we can group them to a cluster
- *
- * this can improve efficiency by first checking if the ray
- * intersects this bounding box, and only then checking if it intersects
- * each of the individual objets in the cluster
- *
- * TODO: add hierarchical bounding boxes
- */
-class Cluster : public SceneObject {
-private:
-	BoundingBox bb;
-
-public:
-	std::vector<SceneObject *> boundedObjects; 
-	
-	// overriden methods:
-	bool isCluster();
-	bool isCluster() const;
-	IntersectionResult intersects(const Ray &r);
-	IntersectionResult intersects(const Ray &r) const;
-	SceneObject *makeCopy();
-	SceneObject *makeCopy() const;
-	std::string tag();
-	std::string tag() const;
-	BoundingBox getBoundBox();
-	BoundingBox getBoundBox() const;
-
-	// specific methods
-	Cluster();
-	Cluster(const Cluster &);
-	void addObject(const SceneObject &);
-	~Cluster();
-};
 
 /* ShadableObject
  *
@@ -99,8 +70,6 @@ public:
 	ShadableObject(Material mat);
 	virtual vec3 surfaceNormal(const vec3 &point) = 0;
 	virtual vec3 surfaceNormal(const vec3 &point) const = 0;
-	bool isCluster();
-	bool isCluster() const; 
 };
 
 class Sphere : public ShadableObject {
@@ -120,8 +89,8 @@ public:
 	vec3 surfaceNormal(const vec3 &point) const;
 	std::string tag();
 	std::string tag() const;
-	BoundingBox getBoundBox();
-	BoundingBox getBoundBox() const;
+	BBox getBBox();
+	BBox getBBox() const;
 };
 
 class Plane : public ShadableObject {
@@ -143,8 +112,8 @@ public:
 	vec3 surfaceNormal(const vec3&) const;
 	std::string tag();
 	std::string tag() const;
-	BoundingBox getBoundBox();
-	BoundingBox getBoundBox() const;
+	BBox getBBox();
+	BBox getBBox() const;
 };
 
-
+#endif

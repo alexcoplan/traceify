@@ -5,6 +5,9 @@
 #define SHADOW_EPS 	0.00001
 #define MAX_TRACE_DEPTH 3
 
+// BBOX_EPS is used as a +/- bound for infinitely thin objects
+// e.g. an axis-aligned plane
+
 RenderStats::RenderStats() :
 	ss_x4(0), ss_x16(0), ss_x64(0) {}
 
@@ -145,11 +148,12 @@ RGBVec World::traceRay(const Ray &ray, double t_min, int depth) {
 		if (reflections_enabled && obj->material.reflective && depth < MAX_TRACE_DEPTH) {
 			// recursively trace reflection rays:
 			
+			RGBVec k_m = obj->material.specular_colour;
+			if (k_m.r() == 0.0 && k_m.g() == 0.0 && k_m.b() == 0.0) continue;
+			
 			vec3 d = ray.direction;
 			Ray reflected(p, d - n.scaled(2 * d.dot(n)));
 			RGBVec reflectedColour = traceRay(reflected, REFLECTION_EPS, depth + 1);
-			if (reflectedColour.r() == 0.0 && reflectedColour.g() == 0.0 && reflectedColour.b() == 0.0) continue;
-			RGBVec k_m = obj->material.specular_colour;
 			result_vec += reflectedColour.multiplyColour(k_m);
 		}
 

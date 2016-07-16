@@ -5,22 +5,48 @@ GeometryException::GeometryException(std::string msg) : std::runtime_error(msg) 
 IntersectionDatum::IntersectionDatum() : IntersectionResult(), intersectedObj(NULL) {}
 IntersectionDatum::IntersectionDatum(double t, SceneObject *objPtr) : IntersectionResult(t), intersectedObj(objPtr) {}
 
-/* BoundingBox implementation
+/* BBox implementation
  *
- * BoundingBox is a simple construct that
- * does what it says on the tin
+ * BBox is a simple bounding box construct.
  *
- * used by Cluster objects */
-BoundingBox::BoundingBox() 
-	: x_min(0.0), x_max(0.0), y_min(0.0), y_max(0.0), z_min(0.0), z_max(0.0) {}
+ * used in the BVH implementation */
 
-void BoundingBox::swallow(const BoundingBox &b) {
-	if (b.x_min < x_min) x_min = b.x_min;
-	if (b.x_max > x_max) x_max = b.x_max;
-	if (b.y_min < y_min) y_min = b.y_min;
-	if (b.y_max > y_max) y_max = b.y_max;
-	if (b.z_min < z_min) z_min = b.z_min;
-	if (b.z_max > z_max) z_max = b.z_max;
+const double BBox::inf = std::numeric_limits<double>::infinity();
+
+BBox::BBox() {
+	for (int i = 0; i < 2; i++) {
+		min[i] = max[i] = 0.0;
+	}
+}
+
+BBox::BBox(double initSize) {
+	for (int i = 0; i < 2; i++) {
+		min[i] = -initSize;
+		max[i] = initSize;
+	}
+}
+
+void BBox::swallow(const BBox &b) {
+	for (int i = 0; i < 2; i++) {
+		if (b.min[i] < min[i]) min[i] = b.min[i];
+		if (b.max[i] > max[i]) max[i] = b.max[i];
+	}
+}
+
+void BBox::operator=(const BBox &b) {
+	for (int i = 0; i < 2; i++) {
+		min[i] = b.min[i];
+		max[i] = b.max[i];
+	}
+}
+
+double BBox::midpointForAxis(int axis) {
+	if (min[axis] == -inf || max[axis] == inf) return 0.0;
+	return (min[axis] + max[axis]) / 2.0;
+}
+
+vec3 BBox::getMidpoint() {
+	return vec3(midpointForAxis(X_AXIS), midpointForAxis(Y_AXIS), midpointForAxis(Z_AXIS));
 }
 
 /* SceneObject implementation
@@ -31,15 +57,6 @@ void BoundingBox::swallow(const BoundingBox &b) {
 
 // need this for the virtual destructor to compile
 SceneObject::~SceneObject() {}
-
-// Used to contruct the portion of the subclassed
-// objects which is a ShadableObject
-//
-// Note that ShadableObject is still abstract
-ShadableObject::ShadableObject(Material mat) : material(mat) {}
-
-bool ShadableObject::isCluster() 	{ return false; }
-bool ShadableObject::isCluster() const 	{ return false; }
 
 // note that the `makeCopy` method is necessary to allow us
 // to make a heap-allocated copy of a SceneObject
@@ -55,12 +72,10 @@ SceneObject *Sphere::makeCopy() const 	{ return new Sphere(*this); }
 std::string SceneObject::tag() 	{ return "SceneObject"; }
 std::string Sphere::tag() 	{ return "Sphere"; }
 std::string Plane::tag() 	{ return "Plane"; }
-std::string Cluster::tag() 	{ return "Cluster"; }
 
 std::string SceneObject::tag() 	const { return "SceneObject"; }
 std::string Sphere::tag() 	const { return "Sphere"; }
 std::string Plane::tag() 	const { return "Plane"; }
-std::string Cluster::tag() 	const { return "Cluster"; }
 
 /* Sphere implementation */
 Sphere::~Sphere() {}
@@ -81,21 +96,22 @@ vec3 Sphere::surfaceNormal(const vec3 &p) const {
 	return (p - centre).normalised();
 }
 
-BoundingBox Sphere::getBoundBox() const {
-	BoundingBox bb;
+BBox Sphere::getBBox() const {
+	BBox bb;
 
-	bb.x_min = centre.x() - radius;
-	bb.x_max = centre.x() + radius;
-	bb.y_min = centre.y() - radius;
-	bb.y_max = centre.y() + radius;
-	bb.z_min = centre.z() - radius;
-	bb.z_max = centre.z() + radius;
+	bb.min[X_AXIS] = centre.x() - radius;
+	bb.min[Y_AXIS] = centre.y() - radius;
+	bb.min[Z_AXIS] = centre.z() - radius;
+
+	bb.max[X_AXIS] = centre.x() + radius;
+	bb.max[Y_AXIS] = centre.y() + radius;
+	bb.max[Z_AXIS] = centre.z() + radius;
 
 	return bb;
 }
 
-BoundingBox Sphere::getBoundBox() {
-	return const_cast<const Sphere *>(this)->getBoundBox();
+BBox Sphere::getBBox() {
+	return const_cast<const Sphere *>(this)->getBBox();
 }
 
 // Sphere Intersection
@@ -145,11 +161,24 @@ vec3 Plane::surfaceNormal() const 		{ return normal; }
 vec3 Plane::surfaceNormal(const vec3&) 		{ return normal; }
 vec3 Plane::surfaceNormal(const vec3&) const 	{ return normal; }
 
-BoundingBox Plane::getBoundBox() { 
-	throw GeometryException("Cannot get the bounding box of a plane"); 
+BBox Plane::getBBox() { 
+	vec3 pwnorm = normal.pointwiseAbsolute(); // ignore signs in upcoming comparision
+	BBox result(BBox::inf); // infinite bbox
+	int axisToBound = -1;
+	
+	if (pwnorm == vec3::iVec) 	axisToBound = X_AXIS;
+	else if (pwnorm == vec3::jVec) 	axisToBound = Y_AXIS;
+	else if (pwnorm == vec3::kVec) 	axisToBound = Z_AXIS;
+
+	if (axisToBound != -1) {
+		result.max[axisToBound] = BBOX_EPS;
+		result.min[axisToBound] = -BBOX_EPS;
+	}
+
+	return result;
 }
 
-BoundingBox Plane::getBoundBox() const { 
+BBox Plane::getBBox() const { 
 	throw GeometryException("Cannot get the bounding box of a plane"); 
 }
 
@@ -169,99 +198,5 @@ IntersectionResult Plane::intersects(const Ray &ray) {
 	return const_cast<const Plane *>(this)->intersects(ray);
 }
 
-// Cluster:
-Cluster::Cluster() {}
 
-Cluster::Cluster(const Cluster &c)
-	: bb(c.bb) {
-	for (size_t i = 0; i < c.boundedObjects.size(); i++) {
-		boundedObjects.push_back(c.boundedObjects[i]->makeCopy());
-	}	
-}
 
-bool Cluster::isCluster()	{ return true; }
-bool Cluster::isCluster() const	{ return true; }
-
-SceneObject *Cluster::makeCopy() {
-	return new Cluster(*this);
-}
-
-SceneObject *Cluster::makeCopy() const {
-	return new Cluster(*this);
-}
-
-BoundingBox Cluster::getBoundBox() 	 { return bb; }
-BoundingBox Cluster::getBoundBox() const { return bb; }
-
-void Cluster::addObject(const SceneObject &obj) {
-	SceneObject *obj_ptr = obj.makeCopy();
-	boundedObjects.push_back(obj_ptr);
-	bb.swallow(obj_ptr->getBoundBox());
-}
-
-double max(double a, double b, double c) {
-	return a > b ? (c > a ? c : a) : (c > b ? c : b);
-}
-
-// TODO: optimise this (it's not bad, but we could probably do better)
-IntersectionResult Cluster::intersects(const Ray &ray) const {
-	const vec3 e = ray.origin;
-       	const vec3 d = ray.direction;
-
-	double t_min = (bb.x_min - e.x()) / d.x();
-	double t_max = (bb.x_max - e.x()) / d.x();
-
-	if (t_min > t_max) {
-		double tmp = t_max;
-		t_max = t_min;
-		t_min = tmp;
-	}
-
-	double t_y_min = (bb.y_min - e.y()) / d.y();
-	double t_y_max = (bb.y_max - e.y()) / d.y();
-
-	if (t_y_min > t_y_max) {
-		double tmp = t_y_max;
-		t_y_max = t_y_min;
-		t_y_min = tmp;
-	}
-
-	if ((t_min > t_y_max) || (t_y_min > t_max))
-		return IntersectionResult();
-
-	if (t_y_min > t_min)
-		t_min = t_y_min;
-
-	if (t_y_max < t_max)
-		t_max = t_y_max;
-
-	double t_z_min = (bb.z_min - e.z()) / d.z();
-	double t_z_max = (bb.z_max - e.z()) / d.z();
-
-	if (t_z_min > t_z_max) {
-		double tmp = t_z_max;
-		t_z_max = t_z_min;
-		t_z_min = tmp;
-	}
-
-	if ((t_min > t_z_max) || (t_z_min > t_max))
-		return IntersectionResult();
-
-	if (t_z_min > t_min)
-		t_min = t_z_min;
-
-	if (t_z_max < t_max)
-		t_max = t_z_max;
-
-	return IntersectionResult(t_min);
-}
-
-IntersectionResult Cluster::intersects(const Ray &ray) {
-	return const_cast<const Cluster *>(this)->intersects(ray);
-}
-
-Cluster::~Cluster() {
-	for (size_t i = 0; i < boundedObjects.size(); i++) {
-		delete boundedObjects[i];
-	}
-}
